@@ -8,7 +8,7 @@ export default defineNuxtConfig({
         apiSecret: '123',
         // Keys within public, will be also exposed to the client-side
         public: {
-            apiBase: process.env.NODE_ENV === "development" ? "http://localhost:1337/api" : "https://api.salesmarket.site",
+            apiBase: process.env.NODE_ENV === "development" ? "http://localhost:1337/api" : "https://api.salesmarket.site/api",
         }
     },
     devtools: {enabled: true},
