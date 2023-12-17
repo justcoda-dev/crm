@@ -1,25 +1,35 @@
 <template>
   <v-date-picker
       class="custom-calendar"
-      expanded mode="date"
-      v-model.range="rangeDate"
-      :masks="masks"
-      :attributes="attributes"
+      expanded
+      v-model.range="selectedDate"
+      @did-move="onChangeMonth"
+      :attributes="props.calendarList"
+      :disabled-dates="disabledDates"
+      mode="date"
   >
-    <template v-slot:day-content="{attributes, day, dayEvents}">
+    <template #day-content="{attributes:[attribute],dayEvents, day, dayProps}">
       <div class="vc-day-ceil" v-on="dayEvents">
         <div class="vc-day-label-wrapper">
-          <span class="vc-day-label">{{ day.day }}</span>
+          <span class="vc-day-label">
+            {{ day.day }}
+          </span>
           <div class="vc-day-reserved-comment-wrapper">
             <p
-                v-for="attr in attributes"
-                :key="attr.key"
                 class="vc-day-reserved-comment"
-                :class="{reserved:attr.customData?.reserved}"
+                v-show="dayProps['aria-disabled']"
+                :class="{reserved: dayProps['aria-disabled']}"
             >
-              {{ attr.customData?.costumer }}
+              {{ attribute?.customData?.attributes?.name }}
               <br>
-              {{ attr.customData?.phone }}
+              {{ attribute?.customData?.attributes?.phone }}
+              <br>
+              {{ attribute?.customData?.total_price }} грн
+              <slot
+                  name="menu-reserved"
+                  v-if="dayProps['aria-disabled']"
+                  v-bind="{attribute, day}"
+              />
             </p>
           </div>
         </div>
@@ -29,35 +39,79 @@
 </template>
 
 <script lang="ts" setup>
-const masks = ref({
-  weekdays: "WWW"
-})
-const rangeDate = ref()
-const onSubmitForm = () => {
+
+interface IProps {
+  calendarList: [],
+  currentPrice: object
 }
 
-const attributes = ref([{
-  key: 1,
-  popover: {
-    label: "Koval Oleksandr Anatoliovych"
-  },
-  customData: {
-    reserved: true,
-    costumer: "Koval Oleksandr Anatoliovych",
-    phone: "+380952823990"
-  },
-  dates: [
-    new Date(2023, 11, 24),
-    new Date(2023, 11, 25),
-    new Date(2023, 11, 26),
-  ]
-}])
+const props = defineProps<IProps>()
+const emit = defineEmits()
+const selectedDate = ref({})
 
-watch(() => rangeDate.value, () => {
-  console.log(rangeDate.value)
+const disabledDates = computed(() => {
+  return props.calendarList.map(date => date.dates)
 })
-onMounted(() => {
+
+const weekendsPrice = computed(() => parseInt(props.currentPrice?.weekendsPrice))
+const weekdaysPrice = computed(() => parseInt(props.currentPrice?.weekdaysPrice))
+
+const mapSelectedDate = computed(() => {
+  let res = {};
+  for (const key in selectedDate.value) {
+    res[key] = selectedDate.value[key].toString()
+  }
+
+  const start = new Date(selectedDate.value?.start)
+  const end = new Date(selectedDate.value?.end)
+
+  const filterDate = `${start.getFullYear()}-${start.getMonth() + 1}`
+
+  let daysArray = []
+  let daysCount = (end.getTime() - start.getTime()) / 1000 / 60 / 60 / 24 || 1
+  let day = start.getDay();
+  res.daysCount = daysCount
+  while (daysCount > 0) {
+    if (day < 7) {
+      daysArray.push(day)
+    } else {
+      day = 0
+      daysArray.push(day)
+    }
+    daysCount--
+    day++
+  }
+  const saturday = 6;
+  const sunday = 0;
+
+  res.total_price = daysArray.reduce((prev, curr) => {
+    if (saturday === curr || sunday === curr) {
+      return prev + weekendsPrice.value
+    } else {
+      return prev + weekdaysPrice.value
+    }
+  }, 0)
+
+
+  res.days = daysArray
+  res.filter_date = filterDate
+  return res
 })
+
+const onSelectDate = () => {
+  console.log(mapSelectedDate)
+  emit("selectDate", mapSelectedDate.value)
+}
+
+const onChangeMonth = async ([month]) => {
+  emit("changeMonth", month)
+}
+
+
+watch(() => selectedDate.value, () => {
+  onSelectDate()
+})
+
 </script>
 
 <style lang="scss">
@@ -134,16 +188,13 @@ $day-height: 90px;
 
 
   .vc-day-label-wrapper {
-    display: flex;
-    //flex-direction: column;
+    display: inline-block;
     z-index: 10;
     overflow: hidden;
   }
 
   .vc-day-label {
     display: inline;
-    width: 25px;
-    height: 25px;
     position: relative;
     z-index: 1;
     font-size: 1rem;
@@ -158,9 +209,10 @@ $day-height: 90px;
 
   .vc-day-reserved-comment {
     font-size: 13px;
+    text-align: center;
     color: white;
     font-weight: 500;
-    text-indent: 30px;
+    text-indent: 15px;
     box-sizing: border-box;
     @media (max-width: 700px) {
       padding-top: 20px;
