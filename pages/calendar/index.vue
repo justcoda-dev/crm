@@ -94,28 +94,6 @@ const mapCalendarDates = computed(() => {
   })
 })
 
-const mapCalendarData = computed(() => {
-  return calendarDataFromDb.value?.data.map(item => {
-    return {
-      key: item.id,
-      customData: {
-        costumer: item.attributes?.name,
-        phone: item.attributes?.phone,
-      },
-      dates: [
-        ...item.attributes?.calendar_dates?.data?.map(deepItem => {
-          return {
-            id: deepItem.id,
-            start: deepItem.attributes?.start,
-            end: deepItem.attributes?.end,
-          }
-        })
-      ]
-    }
-  })
-})
-
-
 const onSubmitCreateForm = async (formData: object) => {
   showCreateCostumerForm.value = false
 

@@ -50,7 +50,7 @@ const emit = defineEmits()
 const selectedDate = ref({})
 
 const disabledDates = computed(() => {
-  return props.calendarList.map(date => date.dates)
+  return props.calendarList?.map(date => date.dates)
 })
 
 const weekendsPrice = computed(() => parseInt(props.currentPrice?.weekendsPrice))
@@ -99,7 +99,6 @@ const mapSelectedDate = computed(() => {
 })
 
 const onSelectDate = () => {
-  console.log(mapSelectedDate)
   emit("selectDate", mapSelectedDate.value)
 }
 

@@ -3,12 +3,14 @@ import LOCALES from "./constants/i18n";
 
 export default defineNuxtConfig({
 // @ts-ignore
+    ssr: true,
     runtimeConfig: {
         // The private keys which are only available within server-side
         apiSecret: '123',
         // Keys within public, will be also exposed to the client-side
         public: {
-            apiBase: process.env.NODE_ENV === "development" ? "http://localhost:1337/api" : "https://api.salesmarket.site/api",
+            // apiBase: process.env.NODE_ENV === "development" ? "http://localhost:1337/api" : "https://api.salesmarket.site/api",
+            apiBase: "https://api.salesmarket.site/api",
         }
     },
     devtools: {enabled: true},

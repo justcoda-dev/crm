@@ -66,7 +66,7 @@ const onCancel = () => {
 watch(() => createForm.value.name, _debounce(async (value) => {
   try {
     if (value && value.length > 3 || value?.title?.length) {
-      const {data} = await $fetch(`${apiBase}/costumers?filters[name][$startsWith]=${typeof value === 'string' ? value : value.title}`)
+      const {data} = await $fetch(`${apiBase}/costumers?filters[name][$startsWith]=${typeof value === 'string' ? value : value?.title}`)
       usersFromDb.value = data.map(user => {
         return {
           id: user.id,
