@@ -64,8 +64,9 @@ const mapSelectedDate = computed(() => {
 
   const start = new Date(selectedDate.value?.start)
   const end = new Date(selectedDate.value?.end)
-
-  const filterDate = `${start.getFullYear()}-${start.getMonth() + 1}`
+  const month = start.getMonth() + 1
+  const fullYear = start.getFullYear()
+  const filterDate = `${fullYear}-${month < 10 ? '0' + month : month}`
 
   let daysArray = []
   let daysCount = (end.getTime() - start.getTime()) / 1000 / 60 / 60 / 24 || 1

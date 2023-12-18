@@ -54,7 +54,9 @@ const {public: {apiBase}} = useRuntimeConfig()
 
 const createCalendarMonthInitial = () => {
   const date = new Date()
-  return `${date.getFullYear()}-${date.getMonth() + 1}`
+  const month = date.getMonth() + 1
+  const fullYear = date.getFullYear()
+  return `${fullYear}-${month < 10 ? '0' + month : month}`
 }
 
 const showCreateCostumerForm = ref(false)
@@ -62,13 +64,13 @@ const showEditCostumerForm = ref(false)
 const selectedDates = ref({})
 const calendarMonth = ref(createCalendarMonthInitial())
 const editCostumer = ref({})
-
+console.log(calendarMonth.value)
 const {
   data: calendarDatesFromDb,
   refresh: refreshCalendarDatesFromDb,
 } = await useFetch(() =>
     `${apiBase}/calendar-dates?populate=*&filters[filter_date][$startsWith]=${calendarMonth.value}`)
-
+console.log(calendarDatesFromDb.value)
 const {
   data: currentPriceFromDb,
   refresh: refreshCurrentPriceFromDb
@@ -96,7 +98,8 @@ const mapCalendarDates = computed(() => {
 
 const onSubmitCreateForm = async (formData: object) => {
   showCreateCostumerForm.value = false
-
+  console.log(formData)
+  console.log(selectedDates.value)
   if (formData.userFromDb) {
     const {data: calendarDates} = await useFetch(`${apiBase}/calendar-dates`, {
       method: "POST",
@@ -168,6 +171,7 @@ const onSelectDate = (data: object) => {
 
 const onChangeMonth = (month: object) => {
   calendarMonth.value = month.id
+  console.log(month.id)
 }
 
 const onDeleteReservedMenu = async (id: number) => {
