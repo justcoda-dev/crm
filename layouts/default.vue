@@ -1,10 +1,13 @@
 <template>
-  <v-app>
-    <Header :headerMenuList="headerMenuList"/>
-    <v-main>
-      <slot/>
-    </v-main>
-  </v-app>
+  <v-theme-provider>
+    <v-app>
+      <Header :headerMenuList="headerMenuList"/>
+      <v-main>
+        <slot/>
+      </v-main>
+
+    </v-app>
+  </v-theme-provider>
 </template>
 <script lang="ts" setup>
 

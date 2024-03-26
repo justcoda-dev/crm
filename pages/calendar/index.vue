@@ -64,13 +64,12 @@ const showEditCostumerForm = ref(false)
 const selectedDates = ref({})
 const calendarMonth = ref(createCalendarMonthInitial())
 const editCostumer = ref({})
-console.log(calendarMonth.value)
 const {
   data: calendarDatesFromDb,
   refresh: refreshCalendarDatesFromDb,
 } = await useFetch(() =>
     `${apiBase}/calendar-dates?populate=*&filters[filter_date][$startsWith]=${calendarMonth.value}`)
-console.log(calendarDatesFromDb.value)
+
 const {
   data: currentPriceFromDb,
   refresh: refreshCurrentPriceFromDb
@@ -95,7 +94,6 @@ const mapCalendarDates = computed(() => {
     }
   })
 })
-
 const onSubmitCreateForm = async (formData: object) => {
   showCreateCostumerForm.value = false
   console.log(formData)

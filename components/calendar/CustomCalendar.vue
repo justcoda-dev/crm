@@ -9,6 +9,7 @@
       mode="date"
   >
     <template #day-content="{attributes:[attribute],dayEvents, day, dayProps}">
+      <!--vc-highlights-->
       <div class="vc-day-ceil" v-on="dayEvents">
         <div class="vc-day-label-wrapper">
           <span class="vc-day-label">
@@ -39,6 +40,7 @@
 </template>
 
 <script lang="ts" setup>
+import {DatePicker as VDatePicker} from "v-calendar";
 
 interface IProps {
   calendarList: [],
@@ -52,6 +54,7 @@ const selectedDate = ref({})
 const disabledDates = computed(() => {
   return props.calendarList?.map(date => date.dates)
 })
+console.log(disabledDates.value)
 
 const weekendsPrice = computed(() => parseInt(props.currentPrice?.weekendsPrice))
 const weekdaysPrice = computed(() => parseInt(props.currentPrice?.weekdaysPrice))
@@ -149,6 +152,10 @@ $day-height: 90px;
       border-bottom: none;
     }
   }
+
+  //.vc-highlights {
+  //  display: none;
+  //}
 
   .vc-day {
     position: relative;

@@ -16,6 +16,7 @@
   "text-field.password.placeholder": "Введіть пароль",
   "text-field.password-repeat.placeholder": "Введіть пароль ще раз",
   "text-field.name.placeholder": "Введіть імя",
+  "text-field.search": "Пошук",
   "button-forgot.login": "Забули пароль ?",
   "button-forgot.password": "Забули пароль ?",
   "button-login": "Увійти",
@@ -23,6 +24,7 @@
   "button-register": "Зареєструватись",
   "button-change.to-register": "Зареєструватись",
   "button-submit": "Підтвердити",
+  "button-add": "Додати",
   "button-delete": "Видалити",
   "button-cancel": "Скасувати",
   "button-edit": "Редагувати",
@@ -32,5 +34,7 @@
   "error.email": "Невірно вказаний E-mail",
   "error.name": "Імя повинно бути більше 3х символів",
   "title.create-user": "Створити клієнта",
-  "title.edit-user": "Редагувати клієнта"
+  "title.edit-user": "Редагувати клієнта",
+  "title.name": "Імя",
+  "title.phone": "Телефон"
 }

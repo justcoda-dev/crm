@@ -1,10 +1,10 @@
 <template>
-    <keep-alive>
-      <component
-          @onChangeComponent="onChangeComponent"
-          :is="components[currentComponent]"
-      />
-    </keep-alive>
+  <keep-alive>
+    <component
+        @onChangeComponent="onChangeComponent"
+        :is="components[currentComponent]"
+    />
+  </keep-alive>
 </template>
 
 <script lang="ts" setup>
