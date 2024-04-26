@@ -5,7 +5,6 @@
         v-model="createForm.name"
         :items="usersFromDb"
         :disabled="disabledForms"
-
     >
       <template #item="{item, props}">
         <div class="py-2 px-2 v-combobox__select-item" :value="item.title"

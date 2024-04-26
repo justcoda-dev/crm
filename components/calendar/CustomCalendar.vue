@@ -54,7 +54,6 @@ const selectedDate = ref({})
 const disabledDates = computed(() => {
   return props.calendarList?.map(date => date.dates)
 })
-console.log(disabledDates.value)
 
 const weekendsPrice = computed(() => parseInt(props.currentPrice?.weekendsPrice))
 const weekdaysPrice = computed(() => parseInt(props.currentPrice?.weekdaysPrice))

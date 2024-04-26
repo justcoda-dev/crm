@@ -17,20 +17,9 @@ export default defineNuxtConfig({
     devtools: {enabled: true},
     modules: [
         '@samk-dev/nuxt-vcalendar',
-        'vuetify-nuxt-module',
         'nuxt-lodash',
         '@pinia/nuxt',
     ],
-    vuetify: {
-        moduleOptions: {
-            /* module specific options */
-        },
-        vuetifyOptions: {
-            theme: {
-                dark: true
-            }
-        },
-    },
     lodash: {
         prefix: "_",
         prefixSkip: ["string"],

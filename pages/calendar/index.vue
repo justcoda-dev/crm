@@ -14,7 +14,6 @@
         />
       </template>
     </custom-calendar>
-
     <v-dialog v-model="showCreateCostumerForm">
       <v-card class="pa-4">
         <template #title>
@@ -94,16 +93,14 @@ const mapCalendarDates = computed(() => {
     }
   })
 })
+
 const onSubmitCreateForm = async (formData: object) => {
   showCreateCostumerForm.value = false
-  console.log(formData)
-  console.log(selectedDates.value)
   if (formData.userFromDb) {
     const {data: calendarDates} = await useFetch(`${apiBase}/calendar-dates`, {
       method: "POST",
       body: {data: selectedDates.value}
     })
-
     const {data: userFromDbWithDates} = await useFetch(`${apiBase}/costumers/${formData.userId}?populate=*`)
 
     const responseCostumers = await useFetch(`${apiBase}/costumers/${formData.userId}`, {
@@ -133,7 +130,6 @@ const onSubmitCreateForm = async (formData: object) => {
       }
     })
   }
-
   refreshCalendarDatesFromDb()
 }
 const onCancelCostumerCreateForm = () => {
@@ -187,6 +183,6 @@ const onDeleteReservedMenu = async (id: number) => {
 
 <style lang="scss" scoped>
 .calendar-container {
-  margin-top: 20px;
+  padding: 10px 16px;
 }
 </style>
