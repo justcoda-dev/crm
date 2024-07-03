@@ -1,24 +1,31 @@
 <template>
   <v-form @submit.prevent="onSubmitForm">
     <v-combobox
-        :label="$t('text-field.name.placeholder')"
-        v-model="createForm.name"
-        :items="usersFromDb"
-        :disabled="disabledForms"
+      v-model="form.model.value.name"
+      v-model:menu="menuState"
+      :label="$t('text-field.name.placeholder')"
+      :items="costumersList"
+      :hide-no-data="hideNoData"
+      :error-messages="form.errorMessages.value?.name"
     >
-      <template #item="{item, props}">
-        <div class="py-2 px-2 v-combobox__select-item" :value="item.title"
-             @click="onClick({item, props})">
-          {{ item.title }}
-        </div>
+      <template #item="{ item }">
+        <v-list-item @click="selectCostumerFromDb(item)">
+          {{ item.value }}
+        </v-list-item>
+      </template>
+      <template #no-data v-if="!hideNoData">
+        <v-list-item @click="selectCreateNewCostumer">
+          Клієнта "<b>{{ form.model.value.name }}</b
+          >" в базі не знайдено. Нажміть ентер або <b>сюди</b> щоб тсворити.
+        </v-list-item>
       </template>
     </v-combobox>
     <v-combobox
-        :label="$t('text-field.phone.placeholder')"
-        v-model="createForm.phone"
-        :disabled="disabledForms"
+      :label="$t('text-field.phone.placeholder')"
+      v-model.trim="form.model.value.phone"
+      :error-messages="form.errorMessages.value?.phone"
     />
-    <v-btn type="submit" class="ml-4" :disabled="disabledSubmitBtn">
+    <v-btn type="submit" class="ml-4" :disabled="disabledSubmitButton">
       {{ $t("button-submit") }}
     </v-btn>
     <v-btn class="ml-4" @click="onCancel">
@@ -28,91 +35,130 @@
 </template>
 
 <script lang="ts" setup>
-const emit = defineEmits()
-const {public: {apiBase}} = useRuntimeConfig()
+import type { ICostumer } from "~/TS/ICostumer";
+import { useValidation } from "~/functions/useValidation";
+
+const emit = defineEmits();
+const app = useNuxtApp();
+
 const debounceTimeMs = 300;
 
-const initialCreateForm = {
+const initialForm = {
   name: "",
   phone: "",
   userFromDb: false,
-  userId: null
-}
+  userId: null,
+};
 
-const createForm = ref(initialCreateForm)
-const usersFromDb = ref([])
-const disabledSubmitBtn = ref(true)
-const disabledForms = ref(false)
+const menuState = ref(false);
+const disabledSubmitButton = ref(true);
+const hideNoData = ref(false);
+const costumersFromDb = ref<ICostumer[]>([]);
+const userWantToCreateCostumer = ref(false);
 
-const onClick = ({item, props}: { item: object, props: object }) => {
-  props.onClick()
-  createForm.value.phone = item.props?.phone
-  createForm.value.userId = item.raw?.id
-  createForm.value.userFromDb = true
-  disabledForms.value = true
-}
+const costumersList = computed(() => {
+  if (costumersFromDb.value?.length) {
+    return costumersFromDb.value.map((item: ICostumer) => {
+      return {
+        title: item.attributes.name,
+        id: item.id,
+        phone: item.attributes.phone,
+      };
+    });
+  }
+});
 
+const form = useValidation(initialForm, [
+  {
+    prop: "name",
+    rules: [
+      {
+        fn: (value: string) => value?.length > 4,
+        errorMessage: "Імя'я має мітити більше 4 символів",
+      },
+    ],
+  },
+  {
+    prop: "phone",
+    rules: [
+      {
+        fn: (value: string) => value?.startsWith("+38"),
+        errorMessage: "Номер телефону повинен починатись з '+380'",
+      },
+      {
+        fn: (value: string) => value?.length === 13,
+        errorMessage: "Номер телефону мітить біль 13 символів",
+      },
+      {
+        fn: (value: string) => +value,
+        errorMessage: "Номер складається тільки з цифер",
+      },
+    ],
+  },
+]);
+
+const selectCostumerFromDb = (item: any) => {
+  form.model.value.userFromDb = true;
+  form.model.value.name = item.title;
+  form.model.value.phone = item.raw.phone;
+  form.model.value.userId = item.raw.id;
+  nextTick(() => {
+    disabledSubmitButton.value = false;
+    menuState.value = false;
+  });
+};
+
+const selectCreateNewCostumer = () => {
+  menuState.value = false;
+  form.model.value.userFromDb = false;
+  userWantToCreateCostumer.value = true;
+};
 
 const onSubmitForm = () => {
-  emit("submitForm", createForm.value)
-  createForm.value = initialCreateForm
-}
+  emit("submitForm", form.model.value);
+  form.model.value = initialForm;
+};
 
 const onCancel = () => {
-  emit("cancelCLick")
-}
+  emit("cancelCLick");
+};
 
-watch(() => createForm.value.name, _debounce(async (value) => {
-  try {
-    if (value && value.length > 3 || value?.title?.length) {
-      const {data} = await $fetch(`${apiBase}/costumers?filters[name][$startsWith]=${typeof value === 'string' ? value : value?.title}`)
-      usersFromDb.value = data.map(user => {
-        return {
-          id: user.id,
-          title: user.attributes?.name,
-          props: {
-            name: user.attributes?.name,
-            phone: user.attributes?.phone
-          },
-          attributes: user.attributes
-        }
-      })
-      disabledSubmitBtn.value = false
-    } else {
-      usersFromDb.value = []
-      disabledSubmitBtn.value = true
+watch(
+  () => form.model.value.name,
+  _debounce(async (name) => {
+    try {
+      if (name?.length > 3 && !form.model.value.userFromDb) {
+        const { data }: any = await app.$apiFetch(
+          `/costumers?filters[name][$containsi]=${name}`
+        );
+        costumersFromDb.value = data;
+      }
+    } catch (e) {
+      console.error("create form watcher err", e);
     }
-  } catch (e) {
-    console.error("create form watcher err", e)
+  }, debounceTimeMs)
+);
 
+watch(
+  () => form.model.value.name,
+  (name: string) => {
+    if (userWantToCreateCostumer.value || name === null || name?.length < 3) {
+      hideNoData.value = true;
+    } else {
+      hideNoData.value = false;
+    }
+  },
+  {
+    immediate: true,
   }
-}, debounceTimeMs))
-//
-// watch(() => createForm.value.phone, _debounce(async (value) => {
-//
-//   try {
-//     if (value && value.length > 5) {
-//       const {data} = await $fetch(`${apiBase}/costumers?filters[phone][$startsWith]=${value}`)
-//       usersFromDb.value = data.map(user => {
-//         return {
-//           id: user.id,
-//           title: user.attributes?.name,
-//           props: {
-//             name: user.attributes?.name,
-//             phone: user.attributes?.phone
-//           },
-//           attributes: user.attributes
-//         }
-//       })
-//     } else {
-//       usersFromDb.value = []
-//     }
-//   } catch (e) {
-//     console.error("create form watcher err", e)
-//   }
-// }, debounceTimeMs))
+);
 
-
+watch(
+  () => form.haveErrors.value,
+  (status: any) => {
+    disabledSubmitButton.value = status;
+  }
+);
 </script>
 
 <style lang="scss" scoped>

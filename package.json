@@ -12,6 +12,7 @@
   "devDependencies": {
     "@invictus.codes/nuxt-vuetify": "^0.3.0",
     "@nuxt/devtools": "latest",
+    "@nuxtjs/i18n": "^8.3.1",
     "@samk-dev/nuxt-vcalendar": "^1.0.2",
     "nuxt": "^3.11.1",
     "nuxt-lodash": "^2.5.3",
@@ -28,6 +29,7 @@
     "@nuxtjs/vuetify": "^1.12.3",
     "@pinia/nuxt": "^0.5.1",
     "@popperjs/core": "^2.11.8",
+    "i18n": "^0.15.1",
     "pinia": "^2.1.7",
     "v-calendar": "^3.1.2"
   }

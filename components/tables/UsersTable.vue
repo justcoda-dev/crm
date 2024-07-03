@@ -1,64 +1,51 @@
 <template>
   <v-data-table
-      v-model="selected"
-      :headers="headers"
-      :items="items"
-      item-value="id"
-      :loading="loading"
-      v-model:search="search"
-      show-select
-      return-object
-  >
-    <template #header.data-table-select>
-      <v-checkbox-btn></v-checkbox-btn>
-    </template>
-    <template #item.data-table-select>
-      <v-checkbox-btn></v-checkbox-btn>
-    </template>
-  </v-data-table>
+    v-model="selected"
+    :headers="headers"
+    :items="items"
+    :search="search"
+    show-select
+    return-object
+  ></v-data-table>
 </template>
 
 <script lang="ts" setup>
-import {useI18n} from "vue-i18n";
-
 interface IProps {
-  usersList: []
+  usersList: any[];
+  search: string;
 }
+const { t } = useI18n();
 
-const {t} = useI18n()
-const search = defineModel("search")
-const props = defineProps<IProps>()
+const selected = defineModel("selected");
 
-console.log(props.usersList)
-const selected = ref()
-const items = computed(() => props.usersList?.map(item => {
-  return {
-    id: item.id,
-    user: {
-      name: item.attributes?.name,
-      phone: item.attributes?.phone,
-    }
-  }
-}))
+const props = defineProps<IProps>();
 
-const headers = computed(() => {
-  const keys = Object.keys(items.value?.[0]?.user || {});
-  if (!keys.length) {
-    return []
-  } else {
-    return keys.map(key => {
-      return {title: t(`title.${key}`), value: `user.${key}`, key};
+const items = computed(() => {
+  if (props.usersList.length) {
+    return props.usersList.map((item) => {
+      return reactive({
+        id: item.id,
+        name: item.attributes.name,
+        phone: item.attributes.phone,
+      });
     });
+  } else {
+    return [];
   }
 });
-
-const loading = computed(() => !!props.items?.value?.length)
-watch(selected, () => {
-  console.log(selected.value)
-  console.log(selected)
-})
+const headers = computed(() => {
+  if (!items.value.length) {
+    return [];
+  }
+  const keys = Object.keys(items.value[0]);
+  return keys
+    .filter((item) => item !== "id")
+    .map((key) => ({
+      title: t(`title.${key}`),
+      value: key,
+      key,
+    }));
+});
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

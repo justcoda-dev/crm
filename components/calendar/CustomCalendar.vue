@@ -1,15 +1,16 @@
 <template>
-  <v-date-picker
-      class="custom-calendar"
-      expanded
-      v-model.range="selectedDate"
-      @did-move="onChangeMonth"
-      :attributes="props.calendarList"
-      :disabled-dates="disabledDates"
-      mode="date"
+  <date-picker
+    class="custom-calendar"
+    expanded
+    v-model.range="selectedDate"
+    @did-move="onChangeMonth"
+    :attributes="props.calendarList"
+    :disabled-dates="disabledDates"
+    mode="date"
   >
-    <template #day-content="{attributes:[attribute],dayEvents, day, dayProps}">
-      <!--vc-highlights-->
+    <template
+      #day-content="{ attributes: [attribute], dayEvents, day, dayProps }"
+    >
       <div class="vc-day-ceil" v-on="dayEvents">
         <div class="vc-day-label-wrapper">
           <span class="vc-day-label">
@@ -17,103 +18,110 @@
           </span>
           <div class="vc-day-reserved-comment-wrapper">
             <p
-                class="vc-day-reserved-comment"
-                v-show="dayProps['aria-disabled']"
-                :class="{reserved: dayProps['aria-disabled']}"
+              class="vc-day-reserved-comment"
+              v-show="dayProps['aria-disabled']"
+              :class="{ reserved: dayProps['aria-disabled'] }"
             >
               {{ attribute?.customData?.attributes?.name }}
-              <br>
+              <br />
               {{ attribute?.customData?.attributes?.phone }}
-              <br>
+              <br />
               {{ attribute?.customData?.total_price }} грн
               <slot
-                  name="menu-reserved"
-                  v-if="dayProps['aria-disabled']"
-                  v-bind="{attribute, day}"
+                name="menu-reserved"
+                v-if="dayProps['aria-disabled']"
+                v-bind="{ attribute, day }"
               />
             </p>
           </div>
         </div>
       </div>
     </template>
-  </v-date-picker>
+  </date-picker>
 </template>
 
 <script lang="ts" setup>
-import {DatePicker as VDatePicker} from "v-calendar";
+import { DatePicker } from "v-calendar";
 
 interface IProps {
-  calendarList: [],
-  currentPrice: object
+  calendarList: any[];
+  currentPrice: {};
 }
 
-const props = defineProps<IProps>()
-const emit = defineEmits()
-const selectedDate = ref({})
+const props = defineProps<IProps>();
+const emit = defineEmits();
+const selectedDate = ref({});
 
 const disabledDates = computed(() => {
-  return props.calendarList?.map(date => date.dates)
-})
+  if (props.calendarList) {
+    return props.calendarList?.map((date) => date.dates);
+  }
+  return [];
+});
 
-const weekendsPrice = computed(() => parseInt(props.currentPrice?.weekendsPrice))
-const weekdaysPrice = computed(() => parseInt(props.currentPrice?.weekdaysPrice))
+const weekendsPrice = computed(() =>
+  parseInt(props.currentPrice?.weekends_price)
+);
+const weekdaysPrice = computed(() =>
+  parseInt(props.currentPrice?.weekdays_price)
+);
 
 const mapSelectedDate = computed(() => {
   let res = {};
   for (const key in selectedDate.value) {
-    res[key] = selectedDate.value[key].toString()
+    res[key] = selectedDate.value[key].toString();
   }
 
-  const start = new Date(selectedDate.value?.start)
-  const end = new Date(selectedDate.value?.end)
-  const month = start.getMonth() + 1
-  const fullYear = start.getFullYear()
-  const filterDate = `${fullYear}-${month < 10 ? '0' + month : month}`
+  const start = new Date(selectedDate.value?.start);
+  const end = new Date(selectedDate.value?.end);
+  const month = start.getMonth() + 1;
+  const fullYear = start.getFullYear();
+  const filterDate = `${fullYear}-${month < 10 ? "0" + month : month}`;
 
-  let daysArray = []
-  let daysCount = (end.getTime() - start.getTime()) / 1000 / 60 / 60 / 24 || 1
+  let daysArray = [];
+  let daysCount = (end.getTime() - start.getTime()) / 1000 / 60 / 60 / 24 || 1;
   let day = start.getDay();
-  res.daysCount = daysCount
+  res.daysCount = daysCount;
   while (daysCount > 0) {
     if (day < 7) {
-      daysArray.push(day)
+      daysArray.push(day);
     } else {
-      day = 0
-      daysArray.push(day)
+      day = 0;
+      daysArray.push(day);
     }
-    daysCount--
-    day++
+    daysCount--;
+    day++;
   }
   const saturday = 6;
   const sunday = 0;
 
   res.total_price = daysArray.reduce((prev, curr) => {
     if (saturday === curr || sunday === curr) {
-      return prev + weekendsPrice.value
+      return prev + weekendsPrice.value;
     } else {
-      return prev + weekdaysPrice.value
+      return prev + weekdaysPrice.value;
     }
-  }, 0)
+  }, 0);
 
-
-  res.days = daysArray
-  res.filter_date = filterDate
-  return res
-})
+  res.days = daysArray;
+  res.filter_date = filterDate;
+  return res;
+});
 
 const onSelectDate = () => {
-  emit("selectDate", mapSelectedDate.value)
-}
+  emit("selectDate", mapSelectedDate.value);
+};
 
-const onChangeMonth = async ([month]) => {
-  emit("changeMonth", month)
-}
+const onChangeMonth = async ([month]: [{ id: string }]) => {
+  emit("changeMonth", month.id);
+};
 
-
-watch(() => selectedDate.value, () => {
-  onSelectDate()
-})
-
+watch(
+  () => selectedDate.value,
+  () => {
+    onSelectDate();
+  }
+);
 </script>
 
 <style lang="scss">
@@ -123,7 +131,6 @@ $weekday-bg: #f8fafc;
 $weekday-border: 1px solid #eaeaea;
 $day-width: 40px;
 $day-height: 90px;
-
 
 .custom-calendar {
   width: 100%;
@@ -170,7 +177,8 @@ $day-height: 90px;
       height: 70px;
     }
 
-    &.weekday-1, &.weekday-7 {
+    &.weekday-1,
+    &.weekday-7 {
       background: #eff8ff;
     }
 
@@ -191,7 +199,6 @@ $day-height: 90px;
       box-sizing: border-box;
     }
   }
-
 
   .vc-day-label-wrapper {
     display: inline-block;
@@ -237,9 +244,6 @@ $day-height: 90px;
     width: 100%;
     height: 100%;
     background: #e53e3e;
-
   }
 }
-
-
 </style>

@@ -1,18 +1,15 @@
 <template>
-  <v-menu
-      activator="parent"
-      location="end"
-  >
+  <v-menu activator="parent" location="end">
     <v-card>
       <v-card-actions>
         <v-btn color="primary" outlined @click="onDelete">
-          {{ $t('button-delete') }}
+          {{ $t("button-delete") }}
         </v-btn>
         <v-btn color="primary" outlined @click="onEdit">
-          {{ $t('button-edit') }}
+          {{ $t("button-edit") }}
         </v-btn>
         <v-btn color="primary" outlined @click="onCancel">
-          {{ $t('button-cancel') }}
+          {{ $t("button-cancel") }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -20,28 +17,39 @@
 </template>
 
 <script lang="ts" setup>
+import type { ID } from "~/TS/myTypes";
+
 interface IProps {
-  attribute: object
+  attribute: {
+    customData: {
+      id: ID;
+      attributes: any;
+    };
+    key: string;
+  };
 }
 
-const props = defineProps<IProps>()
+const props = defineProps<IProps>();
+const emit = defineEmits();
 
-const emit = defineEmits()
-const {public: {apiBase}} = useRuntimeConfig()
+const costumer = computed(() => {
+  if (props.attribute) {
+    return {
+      id: props.attribute.customData.id,
+      ...props.attribute.customData.attributes,
+    };
+  } else {
+    return {};
+  }
+});
 
 const onDelete = () => {
-  emit("delete", props.attribute?.key)
-}
+  emit("delete", props.attribute.key);
+};
 const onEdit = () => {
-  emit("edit", {dates: props.attribute?.dates, costumer: props.attribute?.customData})
-}
-const onCancel = () => {
-
-}
-
-
+  emit("edit", costumer);
+};
+const onCancel = () => {};
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

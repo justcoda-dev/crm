@@ -8,7 +8,9 @@
   "header.menuItem.calendar": "Каендар",
   "header.menuItem.create": "Створити клієнта",
   "text-field.email.name": "E-mail",
-  "text-field.name.name": "Імя",
+  "text-field.name": "Імя",
+  "text-field.username": "Логін",
+  "text-field.username.placeholder": "Введіть логін",
   "text-field.phone.placeholder": "Введіть номер телефону",
   "text-field.password.name": "Пароль",
   "text-field.password-repeat.name": "Пароль повторно",
@@ -26,6 +28,7 @@
   "button-submit": "Підтвердити",
   "button-add": "Додати",
   "button-delete": "Видалити",
+  "button-save": "Зберегти",
   "button-cancel": "Скасувати",
   "button-edit": "Редагувати",
   "button-create.new-costumer": "Створити клієнта",
@@ -36,5 +39,9 @@
   "title.create-user": "Створити клієнта",
   "title.edit-user": "Редагувати клієнта",
   "title.name": "Імя",
-  "title.phone": "Телефон"
+  "title.phone": "Телефон",
+  "title.max_reserve": "Максимальна кількість ночей",
+  "title.min_reserve": "Мінімальна кількість ночей",
+  "title.weekends_price": "Ціна на вихідні",
+  "title.weekdays_price": "Ціна на буді"
 }

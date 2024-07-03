@@ -1,31 +1,41 @@
 <template>
   <keep-alive>
     <component
-        @onChangeComponent="onChangeComponent"
-        :is="components[currentComponent]"
+      @onSubmit="onSubmit"
+      :is="currentComponent"
+      v-model:changeComponent="currentComponent"
     />
   </keep-alive>
 </template>
 
 <script lang="ts" setup>
-import LoginForm from "../../components/forms/LoginForm.vue"
-import RegistrationForm from "../../components/forms/RegistrationForm.vue"
+import { useMyAuthStore } from "~/store/auth";
+import LoginForm, {
+  type ILoginFormData,
+} from "../../components/forms/LoginForm.vue";
+import { type IRegistrationFormData } from "~/components/forms/RegistrationForm.vue";
 
 const meta = definePageMeta({
-  layout: "authorization"
-})
+  layout: "authorization",
+});
 
-const currentComponent = ref("LoginForm")
-const components = {
-  LoginForm,
-  RegistrationForm
-}
+const currentComponent = shallowRef(LoginForm);
+const { login, registration } = useMyAuthStore();
+const { authenticated } = storeToRefs(useMyAuthStore());
 
-const onChangeComponent = (componentName) => {
-  currentComponent.value = componentName
-}
+const onSubmit = async (formData: ILoginFormData | IRegistrationFormData) => {
+  if (currentComponent.value === LoginForm) {
+    await login(formData as ILoginFormData);
+    if (authenticated.value) {
+      navigateTo("/");
+    }
+  } else {
+    await registration(formData as IRegistrationFormData);
+    if (authenticated.value) {
+      navigateTo("/");
+    }
+  }
+};
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

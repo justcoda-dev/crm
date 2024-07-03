@@ -1,36 +1,21 @@
 <template>
   <v-app-bar>
-    <v-app-bar-nav-icon
-        variant="text"
-        @click.stop="onMenuToggle"
-    />
+    <v-app-bar-nav-icon variant="text" @click.stop="onMenuToggle" />
     <v-toolbar-title>
-      {{ $t('mainTitle') }}
+      <NuxtLink to="/">{{ $t("mainTitle") }}</NuxtLink>
     </v-toolbar-title>
-    <v-spacer/>
-    <v-btn
-        variant="text"
-        icon="mdi-dots-vertical"
-    />
-    <v-btn icon="mdi-export"/>
+    <v-spacer />
+    <v-btn @click="exitApp" icon="mdi-export" />
   </v-app-bar>
-  <v-navigation-drawer
-      v-model="menuToggle"
-      temporary
-  >
-    <v-list-item
-        prepend-avatar="https://randomuser.me/api/portraits/men/78.jpg"
-        title="John Leider"
-    />
-    <v-divider/>
-    <v-list density="compact" nav>
+  <v-navigation-drawer v-model="menuToggle" temporary>
+    <v-list-item class="my-3" :prepend-avatar="icon" :title="fullName" />
+    <v-divider />
+    <v-list nav>
       <template v-for="menuItem of props.headerMenuList">
-        <NuxtLink
-            :to="menuItem.path"
-        >
+        <NuxtLink :to="menuItem.path">
           <v-list-item
-              :prepend-icon="menuItem.iconName"
-              :title="$t(menuItem.title)"
+            :prepend-icon="menuItem.iconName"
+            :title="$t(menuItem.title)"
           />
         </NuxtLink>
       </template>
@@ -39,8 +24,7 @@
 </template>
 
 <script lang="ts" setup>
-
-type MenuItem = {
+interface MenuItem {
   id: string | number;
   title: string;
   path: string;
@@ -48,12 +32,29 @@ type MenuItem = {
 }
 
 interface IProps {
-  headerMenuList: [];
+  headerMenuList: MenuItem[];
+  user: any;
 }
+const props = defineProps<IProps>();
+const jwt = useCookie("jwt");
+const {
+  public: { apiBase },
+} = useRuntimeConfig();
+const fullName = computed(() => {
+  if (props.user?.name && props.user?.surname) {
+    return `${props.user.name} ${props.user.surname}`;
+  } else {
+    return props.user?.username;
+  }
+});
+const icon = computed(() => `${apiBase}${props.user?.icon?.url}`);
+const exitApp = () => {
+  jwt.value = "";
+  navigateTo("/authorization");
+};
 
-const props = defineProps<IProps>()
-const menuToggle = ref(false)
-const onMenuToggle = () => menuToggle.value = !menuToggle.value
+const menuToggle = ref(false);
+const onMenuToggle = () => (menuToggle.value = !menuToggle.value);
 </script>
 
 <style lang="scss" scoped>
