@@ -34,6 +34,16 @@ const headerMenuList = ref([
   },
 ]);
 
-await store.getUser();
+onMounted(async () => {
+  const localUser = window.localStorage.getItem("user");
+
+  if (!user.value && localUser) {
+    user.value = JSON.parse(localUser);
+  } else if (user.value) {
+    return;
+  } else {
+    await store.getUser();
+  }
+});
 </script>
 <style scoped></style>

@@ -62,7 +62,7 @@ const form = useValidation({ ...props.editCostumer }, [
     ],
   },
 ]);
-console.log(form);
+
 const onSubmitForm = () => {
   emit("submitForm", form.model.value);
 };
@@ -74,7 +74,6 @@ const onCancel = () => {
 watch(
   () => form.haveErrors.value,
   (status: any) => {
-    console.log(status);
     disabledSubmitButton.value = status;
   }
 );

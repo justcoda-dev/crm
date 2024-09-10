@@ -5,10 +5,10 @@
       <NuxtLink to="/">{{ $t("mainTitle") }}</NuxtLink>
     </v-toolbar-title>
     <v-spacer />
-    <v-btn @click="exitApp" icon="mdi-export" />
+    <v-btn @click="logoutApp" icon="mdi-export" />
   </v-app-bar>
   <v-navigation-drawer v-model="menuToggle" temporary>
-    <v-list-item class="my-3" :prepend-avatar="icon" :title="fullName" />
+    <v-list-item class="my-3" :title="fullName" />
     <v-divider />
     <v-list nav>
       <template v-for="menuItem of props.headerMenuList">
@@ -24,6 +24,8 @@
 </template>
 
 <script lang="ts" setup>
+import { useMyAuthStore } from "~/store/auth";
+
 interface MenuItem {
   id: string | number;
   title: string;
@@ -37,6 +39,7 @@ interface IProps {
 }
 const props = defineProps<IProps>();
 const jwt = useCookie("jwt");
+const authStore = useMyAuthStore();
 const {
   public: { apiBase },
 } = useRuntimeConfig();
@@ -48,8 +51,9 @@ const fullName = computed(() => {
   }
 });
 const icon = computed(() => `${apiBase}${props.user?.icon?.url}`);
-const exitApp = () => {
-  jwt.value = "";
+
+const logoutApp = () => {
+  authStore.logout();
   navigateTo("/authorization");
 };
 

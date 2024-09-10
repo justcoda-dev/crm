@@ -15,6 +15,7 @@ export const useCreateCostumerForm = () => {
     phone: string;
     userFromDb: boolean;
     userId: ID;
+    user: any;
   }) => {
     showForm.value = false;
     if (formData.userFromDb) {
@@ -22,7 +23,11 @@ export const useCreateCostumerForm = () => {
         const [calendarDates, costumerFromDbWithDates] = await Promise.all([
           app.$apiFetch<ICalendarDates>("/calendar-dates", {
             method: "POST",
-            body: { data: selectedDates.value },
+            body: {
+              data: {
+                ...selectedDates.value,
+              },
+            },
           }),
           app.$apiFetch<ICostumerData>(
             `/costumers/${formData.userId}?populate=*`
@@ -42,6 +47,13 @@ export const useCreateCostumerForm = () => {
             },
           },
         });
+        
+        const response = await app.$apiFetch(`/users/${formData.user.id}`, {
+          method: "PUT",
+          body: {
+            calendar_dates: calendarDates.data.id,
+          },
+        });
       } catch (e) {
         console.error(e);
       }
@@ -51,10 +63,14 @@ export const useCreateCostumerForm = () => {
           "/calendar-dates",
           {
             method: "POST",
-            body: { data: selectedDates.value },
+            body: {
+              data: {
+                ...selectedDates.value,
+              },
+            },
           }
         );
-        await app.$apiFetch<ICostumers>("/costumers", {
+        const costumer = await app.$apiFetch<ICostumers>("/costumers", {
           method: "POST",
           body: {
             data: {
@@ -63,9 +79,19 @@ export const useCreateCostumerForm = () => {
             },
           },
         });
-      } catch (e) {
-        console.error(e);
-      }
+
+        const response = await app.$apiFetch(`/users/${formData.user.id}`, {
+          method: "PUT",
+          body: {
+            costumers: costumer.data.id,
+            calendar_dates: calendarDates.data.id,
+          },
+        });
+
+        console.log(costumer);
+        console.log(response);
+        console.log(calendarDates.data);
+      } catch (e) {}
     }
   };
   const onShowForm = (date: {

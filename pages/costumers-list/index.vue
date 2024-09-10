@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="py-4">
     <v-row :class="{ 'flex-column': mobileClass }">
       <v-col>
         <v-text-field
@@ -11,7 +11,7 @@
       <v-col>
         <v-btn @click="onOpenCreateForm">{{ $t("button-add") }}</v-btn>
         <v-spacer></v-spacer>
-        <v-btn :disabled="!!selected.length" @click="onDeleteCostumer">{{
+        <v-btn :disabled="!selected.length" @click="onDeleteCostumer">{{
           $t("button-delete")
         }}</v-btn>
       </v-col>
@@ -37,8 +37,9 @@
       <v-alert type="error" :text="alertMessage">
         <nuxt-link
           class="mr-1 text-white"
-          v-for="{ link, date } of selectedCostumerDatesAndLinks"
+          v-for="({ link, date }, index) of selectedCostumerDatesAndLinks"
           :to="link"
+          :key="index"
         >
           {{ date.toLocaleDateString() }}
         </nuxt-link>
@@ -51,18 +52,14 @@
 import UsersTable from "../../components/tables/UsersTable.vue";
 import CreateCostumerForm from "../../components/forms/CreateCostumerForm.vue";
 import { useMyMobileStore } from "~/store/mobile";
-
 const app = useNuxtApp();
 const { mobile } = storeToRefs(useMyMobileStore());
 const mobileClass = computed(() => useMyMobileStore().mobile);
+
 const {
   data: costumers,
   refresh: refreshCostumers,
 }: { data: any; refresh: any } = await app.$useApiFetch("/costumers");
-
-const costumersList = computed(() => {
-  return costumers.value?.data;
-});
 
 const search = ref("");
 const selected = ref([]);
@@ -70,6 +67,10 @@ const selectedCostumerDates = ref<Date[]>([]);
 const showCreateCostumerForm = ref(false);
 const alertMessage = ref("");
 const showAlert = ref(false);
+
+const costumersList = computed(() => {
+  return costumers.value?.data;
+});
 const selectedCostumerDatesAndLinks = computed(() =>
   selectedCostumerDates.value.map((date: Date) => {
     return {

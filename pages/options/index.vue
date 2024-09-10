@@ -1,17 +1,16 @@
 <template>
-  <v-row align="start" class="ma-1">
-    <v-col xs="7" sm="6" md="5" lg="4">
-      <options-card
-        class="options-card__price"
-        :list="settingsData"
-        :disabled="disabledButtons"
-        @onSaveClick="onSaveClick"
-        @onCancelClick="onCancelClick"
-        @onInput="onInput"
-        @onFocused="onFocused"
-      ></options-card>
-    </v-col>
-  </v-row>
+  <v-container class="py-4">
+    <v-row>
+      <v-col>
+        <options-card
+          v-for="(optionItem, index) of optionsData"
+          class="options-card__price ma-2"
+          :item="optionItem"
+          @onSave="onSaveClick"
+        ></options-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -19,63 +18,35 @@ import OptionsCard from "~/components/cards/OptionsCard.vue";
 const app = useNuxtApp();
 const { t } = useI18n();
 
-const { data: settings, refresh: refreshSettings } = await app.$useApiFetch(
-  "/settings"
+const { data: options, refresh: refreshOptions } = await app.$useApiFetch(
+  "/options?populate=*"
 );
 
-const settingsFromDbInitial = computed(() => {
-  if (settings.value) {
-    return settings.value.data.map((setting) => {
-      return {
-        id: setting.id,
-        title: t(`title.${setting.attributes.key}`),
-        changed: false,
-        ...setting.attributes,
-      };
-    });
+const optionsData = computed(() => {
+  if (options.value) {
+    return options.value.data
+      .map((option) => {
+        return { ...option.attributes, id: option.id };
+      })
+      .sort((a, b) => a.id - b.id);
   } else {
     return [];
   }
 });
 
-const settingsData = ref([...settingsFromDbInitial.value]);
-const disabledButtons = ref(true);
-
-const onInput = ({ value, index }: { value: string; index: number }) => {
-  settingsData.value[index] = {
-    ...settingsData.value[index],
-    value,
-    changed: true,
-  };
-  disabledButtons.value = false;
-};
-
-const onSaveClick = () => {
-  settingsData.value.forEach(async (setting) => {
-    if (setting.changed) {
-      try {
-        await app.$apiFetch(`/settings/${setting.id}`, {
-          method: "PUT",
-          body: {
-            data: { value: setting.value },
-          },
-        });
-        disabledButtons.value = true;
-      } catch (e) {
-        console.error("error in  PUT settings,", e);
-      }
-    }
-  });
-};
-
-const onCancelClick = () => {
-  settingsData.value = [...settingsFromDbInitial.value];
-  disabledButtons.value = true;
-};
-
-const onFocused = ({ value, index }: { value: boolean; index: number }) => {
-  if (!value && !settingsData.value[index].value.length) {
-    settingsData.value[index].value = settingsFromDbInitial.value[index].value;
+const onSaveClick = (value: any) => {
+  try {
+    app.$apiFetch(`options/${value.id}`, {
+      method: "PUT",
+      body: {
+        data: {
+          ...value,
+        },
+      },
+    });
+    refreshOptions();
+  } catch (e) {
+    console.error(e);
   }
 };
 </script>

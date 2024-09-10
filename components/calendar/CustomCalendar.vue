@@ -17,6 +17,19 @@
             {{ day.day }}
           </span>
           <div class="vc-day-reserved-comment-wrapper">
+            <!-- first and last date should be first peace and the last one -->
+            <p
+              class="vc-day-reserved-comment"
+              v-show="dayProps['aria-disabled']"
+              :class="{ reserved: dayProps['aria-disabled'] }"
+            >
+              {{ attribute?.customData?.attributes?.name }}
+              <slot
+                name="menu-reserved"
+                v-if="dayProps['aria-disabled']"
+                v-bind="{ attribute, day }"
+              />
+            </p>
             <p
               class="vc-day-reserved-comment"
               v-show="dayProps['aria-disabled']"
@@ -59,9 +72,12 @@ const disabledDates = computed(() => {
   return [];
 });
 
+const cellCollors = ["#333", "#33f", "#000", "#fbfbfb"];
+
 const weekendsPrice = computed(() =>
   parseInt(props.currentPrice?.weekends_price)
 );
+
 const weekdaysPrice = computed(() =>
   parseInt(props.currentPrice?.weekdays_price)
 );
@@ -226,6 +242,7 @@ $day-height: 90px;
     color: white;
     font-weight: 500;
     text-indent: 15px;
+    height: 50%;
     box-sizing: border-box;
     @media (max-width: 700px) {
       padding-top: 20px;

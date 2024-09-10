@@ -6,7 +6,13 @@
     :search="search"
     show-select
     return-object
-  ></v-data-table>
+  >
+    <template #item.name="{ item }">
+      <NuxtLink :to="`${route.path}/costumer/${item.id}`">{{
+        item.name
+      }}</NuxtLink>
+    </template>
+  </v-data-table>
 </template>
 
 <script lang="ts" setup>
@@ -14,12 +20,13 @@ interface IProps {
   usersList: any[];
   search: string;
 }
-const { t } = useI18n();
-
+const props = defineProps<IProps>();
 const selected = defineModel("selected");
 
-const props = defineProps<IProps>();
+const { t } = useI18n();
 
+const route = useRoute();
+console.log(props.usersList);
 const items = computed(() => {
   if (props.usersList.length) {
     return props.usersList.map((item) => {
@@ -33,6 +40,7 @@ const items = computed(() => {
     return [];
   }
 });
+
 const headers = computed(() => {
   if (!items.value.length) {
     return [];

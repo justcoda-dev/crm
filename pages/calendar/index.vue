@@ -1,5 +1,5 @@
 <template>
-  <v-container class="px-1 py-4">
+  <v-container class="py-4">
     <custom-calendar
       @selectDate="onShowCreateCostumerForm"
       @changeMonth="onChangeMonth"
@@ -34,8 +34,8 @@
         />
       </v-card>
     </mobile-dialog>
-    <v-dialog v-else v-model="showCreateCostumerForm">
-      <v-card class="pa-4">
+    <v-dialog class="dialog" v-else v-model="showCreateCostumerForm">
+      <v-card class="pa-4 costumer-card-form">
         <template #title>
           {{ $t("title.create-user") }}
         </template>
@@ -76,15 +76,16 @@ import type { IcurrentPrices } from "~/TS/ICurrentPrice";
 import type { ICalendarDate, ICalendarDates } from "~/TS/ICalendarDate";
 import type { ID } from "~/TS/myTypes";
 import { useEditCostumerForm } from "~/composable/useEditCostumerForm";
+import { useMyUserStore } from "~/store/user";
 
 const app = useNuxtApp();
 const route = useRoute();
 const router = useRouter();
 const { mobile } = storeToRefs(useMyMobileStore());
+const { user } = storeToRefs(useMyUserStore());
 
-const { data: currentPriceFromDb } = await app.$useApiFetch<IcurrentPrices>(
-  () =>
-    "/settings?filters[key][$eq]=weekdays_price&filters[key][$eq]=weekends_price"
+const { data: currentPriceFromDb } = await app.$useApiFetch(
+  () => "/options/4?populate=*"
 );
 
 const { data: calendarDatesFromDb, refresh: refreshCalendarDatesFromDb } =
@@ -101,13 +102,16 @@ const createCalendarMonthInitial = computed(() => {
 });
 
 const mapCurrentPrice = computed(() => {
-  if (currentPriceFromDb.value) {
-    return currentPriceFromDb.value.data.reduce((prev, curr) => {
-      return {
-        ...prev,
-        [curr.attributes.key]: curr.attributes.value,
-      };
-    }, {});
+  if (currentPriceFromDb.value?.data) {
+    return currentPriceFromDb.value.data.attributes.text_option.reduce(
+      (prev, curr) => {
+        return {
+          ...prev,
+          [curr.title]: curr.value,
+        };
+      },
+      {}
+    );
   }
   return {};
 });
@@ -145,7 +149,10 @@ const onSubmitFormAndRefreshCalendarData = async (formCostumer: {
   userFromDb: boolean;
   userId: ID;
 }) => {
-  await onSubmitCreateForm(formCostumer);
+  await onSubmitCreateForm({
+    ...formCostumer,
+    user: user.value,
+  });
   await refreshCalendarDatesFromDb();
 };
 
@@ -193,4 +200,18 @@ watch(
   { immediate: true }
 );
 </script>
-<style scoped></style>
+<style lang="scss" scoped>
+.costumer-card-form {
+  max-width: 500px;
+}
+.v-overlay {
+  .v-overlay__content {
+    background-color: black;
+    align-items: center;
+  }
+}
+.v-overlay__content {
+  background-color: black;
+  align-items: center;
+}
+</style>

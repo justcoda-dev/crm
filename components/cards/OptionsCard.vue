@@ -2,26 +2,23 @@
   <v-card>
     <v-card-item>
       <v-card-text>
-        <v-btn @click="onSave" :disabled="disabled">{{
-          t("button-save")
-        }}</v-btn>
-        <v-btn class="ml-2" @click="onCancel" :disabled="disabled">{{
-          t("button-cancel")
-        }}</v-btn>
         <v-list class="ma-2">
-          <v-list-item v-for="(item, index) of list" :key="item.id">
-            <v-row>
-              <v-col class="my-auto">{{ item.title }}</v-col>
-              <v-col
-                ><v-text-field
-                  variant="underlined"
-                  :placeholder="item.title"
-                  :value="item.value"
-                  @update:modelValue="onInput($event, index)"
-                  @update:focused="onFocused($event, index)"
-              /></v-col>
-            </v-row>
-          </v-list-item>
+          <h3>{{ itemCopy.group_title }}</h3>
+          <template v-for="type of itemKeys">
+            <v-list-item>
+              <v-row>
+                <template v-for="(optionItem, index) of itemCopy[type]">
+                  <v-col>
+                    <options-card-item
+                      @onSave="onSaveClick(index, $event)"
+                      :type="type"
+                      :optionItem="optionItem"
+                    />
+                  </v-col>
+                </template>
+              </v-row>
+            </v-list-item>
+          </template>
         </v-list>
       </v-card-text>
     </v-card-item>
@@ -29,29 +26,46 @@
 </template>
 
 <script lang="ts" setup>
+import { VCheckbox, VTextField } from "vuetify/components";
+import OptionsCardItem from "./OptionsCardItem.vue";
+
 interface IProps {
-  list: any[];
-  disabled: boolean;
+  item: any;
 }
+
 const props = defineProps<IProps>();
-const emit = defineEmits([
-  "onSaveClick",
-  "onFocused",
-  "onCancelClick",
-  "onInput",
-]);
+
+const emit = defineEmits();
+
 const { t } = useI18n();
-const onSave = () => {
-  emit("onSaveClick");
-};
-const onFocused = (value: boolean, index: number) => {
-  emit("onFocused", { value, index });
-};
-const onCancel = () => {
-  emit("onCancelClick");
-};
-const onInput = (value: string, index: number) => {
-  emit("onInput", { value, index });
+
+const itemCopy = ref(
+  _cloneDeep({
+    ...props.item,
+  })
+);
+
+const itemKeys = computed(() => {
+  if (itemCopy.value) {
+    return Object.entries(itemCopy.value)
+      .map(([key, value]) => {
+        if (Array.isArray(value) && value.length) {
+          return key;
+        }
+      })
+      .filter((value) => value !== undefined);
+  } else {
+    return [];
+  }
+});
+
+const onSaveClick = (
+  index: number,
+  { value, type }: { value: any; type: string }
+) => {
+  itemCopy.value[type].splice(index, 1, { ...value });
+
+  emit("onSave", { ...itemCopy.value });
 };
 </script>
 

@@ -12,10 +12,13 @@
   "devDependencies": {
     "@invictus.codes/nuxt-vuetify": "^0.3.0",
     "@nuxt/devtools": "latest",
+    "@nuxt/eslint": "^0.4.0",
     "@nuxtjs/i18n": "^8.3.1",
     "@samk-dev/nuxt-vcalendar": "^1.0.2",
+    "globals": "^15.8.0",
     "nuxt": "^3.11.1",
     "nuxt-lodash": "^2.5.3",
+    "typescript-eslint": "^7.18.0",
     "vite-plugin-vuetify": "^2.0.3",
     "vue": "^3.3.8",
     "vue-i18n": "^9.7.1",
@@ -32,5 +35,31 @@
     "i18n": "^0.15.1",
     "pinia": "^2.1.7",
     "v-calendar": "^3.1.2"
+  },
+  "eslintConfig": {
+    "root": true,
+    "parser": "vue-eslint-parser",
+    "parserOptions": {
+      "parser": "@typescript-eslint/parser"
+    },
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:vue/vue3-recommended",
+      "eslint-config-prettier",
+      "prettier"
+    ],
+    "env": {
+      "browser": true,
+      "node": true,
+      "es2017": true
+    },
+    "ignorePatterns": [
+      "**/shims-vue.d.ts"
+    ]
   }
 }
