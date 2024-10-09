@@ -12,9 +12,10 @@
       <v-text-field
         density="compact"
         :placeholder="$t('text-field.email.placeholder')"
+        :error-messages="emailError"
         prepend-inner-icon="mdi-email-outline"
         variant="outlined"
-        v-model="formData.email"
+        v-model="form.model.value.email"
       />
       <div
         class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
@@ -31,18 +32,24 @@
       </div>
       <v-text-field
         :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+        :error-messages="passwordError"
         :type="visible ? 'text' : 'password'"
         density="compact"
         :placeholder="$t('text-field.password.placeholder')"
         prepend-inner-icon="mdi-lock-outline"
         variant="outlined"
         @click:append-inner="visible = !visible"
-        v-model="formData.password"
+        v-model="form.model.value.password"
       />
 
-      <v-card class="mb-12" color="surface-variant" variant="tonal">
+      <v-card
+        v-if="props.errorMessage"
+        class="mb-12"
+        color="surface-variant"
+        variant="tonal"
+      >
         <v-card-text class="text-medium-emphasis text-caption">
-          error text
+          {{ props.errorMessage.data.error.name }}
         </v-card-text>
       </v-card>
       <v-btn
@@ -52,6 +59,7 @@
         size="large"
         variant="tonal"
         type="submit"
+        :disabled="submitDisabled"
       >
         {{ $t("button-login") }}
       </v-btn>
@@ -71,41 +79,66 @@
   </v-form>
 </template>
 <script lang="ts" setup>
+import { useValidation } from "~/functions/useValidation";
 import RegistrationForm from "./RegistrationForm.vue";
 
 export interface ILoginFormData {
   email: string;
   password: string;
 }
+interface IProps {
+  errorMessage?: any;
+}
+const props = defineProps<IProps>();
 const emit = defineEmits();
 const visible = ref(false);
 
-const formData = ref<ILoginFormData>({
-  email: "",
-  password: "",
-});
-const formDataErrors = ref({
-  email: "dsadas",
-  password: "",
-});
+const form = useValidation({ email: "", password: "" }, [
+  {
+    prop: "email",
+    rules: [
+      { fn: (value: string) => value.length > 3, errorMessage: "to small" },
+    ],
+  },
+  {
+    prop: "password",
+    rules: [
+      { fn: (value: string) => value.length > 3, errorMessage: "to small" },
+    ],
+  },
+]);
 
-watch(
-  () => formData.value.email,
-  (_, value) => {
-    if (value.length < 3) {
-      formDataErrors.value.email = "text";
-    }
-  }
+const emailError = computed(() =>
+  form.errorMessages.value.email?.length
+    ? form.errorMessages.value.email[0]
+    : ""
 );
-watch(
-  () => formData.value.password,
-  (_, value) => {}
+const passwordError = computed(() =>
+  form.errorMessages.value.password?.length
+    ? form.errorMessages.value.password[0]
+    : ""
 );
+const submitDisabled = ref(true);
 
 const onSubmit = () => {
-  emit("onSubmit", formData.value);
+  emit("onSubmit", form.model.value);
+  console.log(form.model.value);
 };
 const onChangeForm = () => {
   emit("update:changeComponent", RegistrationForm);
 };
+watch(
+  () => [form.model.value.email, form.model.value.password],
+  ([email, password]) => {
+    if (email && password) {
+      submitDisabled.value = !!passwordError.value || !!emailError.value;
+    }
+  }
+);
+watch(
+  () => props.errorMessage,
+  (value) => {
+    console.log(props);
+  }
+);
 </script>

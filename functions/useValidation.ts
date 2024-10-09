@@ -1,10 +1,22 @@
 export const useValidation = <T>(
   initialModel: T,
-  instructions: Array<{ prop: string; rules: any[] }>
+  instructions: Array<{
+    prop: string;
+    rules: Array<{
+      errorMessage: string;
+      fn: (value: string) => boolean;
+    }>;
+  }>
 ) => {
   const model = ref<T>(toValue(initialModel));
-  const errorMessages = ref({});
-  const modelPropertyHasCome = ref({});
+  const errorMessages = ref<Record<keyof T, Array<string>>>(
+    {} as Record<keyof T, Array<string>>
+  );
+
+  const modelPropertyHasCome = ref<Record<keyof T, boolean>>(
+    {} as Record<keyof T, boolean>
+  );
+
   const haveErrors = ref(false);
   watch(
     () => model,
@@ -27,6 +39,7 @@ export const useValidation = <T>(
             const filtredMessages = messages.filter(
               (message) => message !== null
             );
+
             errorMessages.value[instruction.prop] = filtredMessages;
           } else {
             errorMessages.value[instruction.prop] = [];

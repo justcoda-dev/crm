@@ -1,5 +1,5 @@
 <template>
-  <v-overlay activator="parent" location-strategy="static" origin="bottom">
+  <v-overlay activator="parent" location-strategy="static">
     <v-card class="align-self-end">
       <v-card-actions>
         <v-list class="d-flex-center w-100">
@@ -19,8 +19,16 @@
 </template>
 
 <script lang="ts" setup>
+import type { ID } from "~/TS/myTypes";
+
 interface IProps {
-  attribute: object;
+  attribute: {
+    customData: {
+      id: ID;
+      attributes: any;
+    };
+    key: string;
+  };
 }
 
 const props = defineProps<IProps>();
@@ -39,7 +47,9 @@ const onEdit = () => {
     costumer: props.attribute?.customData,
   });
 };
-const onCancel = () => {};
+const onCancel = () => {
+  emit("cancel");
+};
 </script>
 
 <style lang="scss" scoped>

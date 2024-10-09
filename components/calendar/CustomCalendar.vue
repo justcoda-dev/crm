@@ -6,6 +6,8 @@
     @did-move="onChangeMonth"
     :attributes="props.calendarList"
     :disabled-dates="disabledDates"
+    @dayclick="onDayClick"
+    ref="calendar"
     mode="date"
   >
     <template
@@ -18,34 +20,18 @@
           </span>
           <div class="vc-day-reserved-comment-wrapper">
             <!-- first and last date should be first peace and the last one -->
-            <p
+            <!-- <p
               class="vc-day-reserved-comment"
               v-show="dayProps['aria-disabled']"
               :class="{ reserved: dayProps['aria-disabled'] }"
-            >
-              {{ attribute?.customData?.attributes?.name }}
-              <slot
-                name="menu-reserved"
-                v-if="dayProps['aria-disabled']"
-                v-bind="{ attribute, day }"
-              />
-            </p>
-            <p
-              class="vc-day-reserved-comment"
-              v-show="dayProps['aria-disabled']"
-              :class="{ reserved: dayProps['aria-disabled'] }"
-            >
-              {{ attribute?.customData?.attributes?.name }}
-              <br />
-              {{ attribute?.customData?.attributes?.phone }}
-              <br />
-              {{ attribute?.customData?.total_price }} грн
-              <slot
-                name="menu-reserved"
-                v-if="dayProps['aria-disabled']"
-                v-bind="{ attribute, day }"
-              />
-            </p>
+            > -->
+            {{ attribute?.customData?.attributes?.name }}
+            {{ attribute?.customData?.attributes?.total_price }}
+            <!-- <slot name="menu-reserved" 
+            v-bind="{ attribute, day }" 
+            v-if="dayProps['aria-disabled']"
+            /> -->
+            <!-- </p> -->
           </div>
         </div>
       </div>
@@ -55,15 +41,30 @@
 
 <script lang="ts" setup>
 import { DatePicker } from "v-calendar";
+import { mapSelectedDate } from "~/functions/mapSelectedDate";
 
 interface IProps {
   calendarList: any[];
-  currentPrice: {};
+  currentPrice: {
+    weekdays_price: string;
+    weekends_price: string;
+  };
 }
 
 const props = defineProps<IProps>();
 const emit = defineEmits();
 const selectedDate = ref({});
+const calendar = ref();
+const selectCounter = ref(0);
+const onDayClick = () => {
+  selectCounter.value = selectCounter.value + 1;
+  if (selectCounter.value === 2) {
+    selectCounter.value = 0;
+  }
+};
+onMounted(() => {
+  console.log(props.calendarList);
+});
 
 const disabledDates = computed(() => {
   if (props.calendarList) {
@@ -74,58 +75,9 @@ const disabledDates = computed(() => {
 
 const cellCollors = ["#333", "#33f", "#000", "#fbfbfb"];
 
-const weekendsPrice = computed(() =>
-  parseInt(props.currentPrice?.weekends_price)
-);
-
-const weekdaysPrice = computed(() =>
-  parseInt(props.currentPrice?.weekdays_price)
-);
-
-const mapSelectedDate = computed(() => {
-  let res = {};
-  for (const key in selectedDate.value) {
-    res[key] = selectedDate.value[key].toString();
-  }
-
-  const start = new Date(selectedDate.value?.start);
-  const end = new Date(selectedDate.value?.end);
-  const month = start.getMonth() + 1;
-  const fullYear = start.getFullYear();
-  const filterDate = `${fullYear}-${month < 10 ? "0" + month : month}`;
-
-  let daysArray = [];
-  let daysCount = (end.getTime() - start.getTime()) / 1000 / 60 / 60 / 24 || 1;
-  let day = start.getDay();
-  res.daysCount = daysCount;
-  while (daysCount > 0) {
-    if (day < 7) {
-      daysArray.push(day);
-    } else {
-      day = 0;
-      daysArray.push(day);
-    }
-    daysCount--;
-    day++;
-  }
-  const saturday = 6;
-  const sunday = 0;
-
-  res.total_price = daysArray.reduce((prev, curr) => {
-    if (saturday === curr || sunday === curr) {
-      return prev + weekendsPrice.value;
-    } else {
-      return prev + weekdaysPrice.value;
-    }
-  }, 0);
-
-  res.days = daysArray;
-  res.filter_date = filterDate;
-  return res;
-});
-
 const onSelectDate = () => {
-  emit("selectDate", mapSelectedDate.value);
+  emit("selectDate", mapSelectedDate(selectedDate, props.currentPrice));
+  calendar.value;
 };
 
 const onChangeMonth = async ([month]: [{ id: string }]) => {

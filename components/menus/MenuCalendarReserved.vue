@@ -49,7 +49,9 @@ const onDelete = () => {
 const onEdit = () => {
   emit("edit", costumer);
 };
-const onCancel = () => {};
+const onCancel = () => {
+  emit("cancel");
+};
 </script>
 
 <style lang="scss" scoped></style>

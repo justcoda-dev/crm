@@ -17,7 +17,15 @@
         variant="outlined"
         v-model="formData.email"
       />
+      <div class="text-subtitle-1 text-medium-emphasis">pidpryemstvo</div>
 
+      <v-text-field
+        density="compact"
+        :placeholder="'vvedit pidpryemstvo'"
+        prepend-inner-icon="mdi-email-outline"
+        variant="outlined"
+        v-model="formData.email"
+      />
       <div
         class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
       >

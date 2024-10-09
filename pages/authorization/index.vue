@@ -3,6 +3,7 @@
     <component
       @onSubmit="onSubmit"
       :is="currentComponent"
+      :errorMessage="authError"
       v-model:changeComponent="currentComponent"
     />
   </keep-alive>
@@ -21,7 +22,7 @@ const meta = definePageMeta({
 
 const currentComponent = shallowRef(LoginForm);
 const { login, registration } = useMyAuthStore();
-const { authenticated } = storeToRefs(useMyAuthStore());
+const { authenticated, authError } = storeToRefs(useMyAuthStore());
 
 const onSubmit = async (formData: ILoginFormData | IRegistrationFormData) => {
   if (currentComponent.value === LoginForm) {

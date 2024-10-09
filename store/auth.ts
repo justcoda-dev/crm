@@ -13,6 +13,7 @@ export const useMyAuthStore = defineStore("myAuthStore", () => {
   const jwt = useCookie("jwt", {
     maxAge: 1000 * 60 * 60,
   });
+  const authError = ref(null);
   const app = useNuxtApp();
 
   const checkAuth = () => {
@@ -35,8 +36,10 @@ export const useMyAuthStore = defineStore("myAuthStore", () => {
         userStore.user = data.user;
         window.localStorage.setItem("user", JSON.stringify(data.user));
       }
+      authError.value = null;
     } catch (e) {
       console.error(e);
+      authError.value = e;
     }
   };
 
@@ -52,8 +55,10 @@ export const useMyAuthStore = defineStore("myAuthStore", () => {
         userStore.user = data.user;
         window.localStorage.setItem("user", JSON.stringify(data.user));
       }
+      authError.value = null;
     } catch (e) {
       console.error(e);
+      authError.value = e;
     }
   };
 
@@ -64,5 +69,5 @@ export const useMyAuthStore = defineStore("myAuthStore", () => {
     window.localStorage.setItem("user", JSON.stringify(null));
   };
 
-  return { jwt, authenticated, login, logout, registration };
+  return { jwt, authenticated, authError, login, logout, registration };
 });
