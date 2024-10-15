@@ -18,7 +18,7 @@ const props = defineProps<IProps>();
 
 const emit = defineEmits(["onClick"]);
 const onDayClick = () => {
-  emit("onClick", props.day);
+  emit("onClick", { ...props.day });
 };
 </script>
 

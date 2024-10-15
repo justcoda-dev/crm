@@ -12,8 +12,9 @@
 </template>
 
 <script lang="ts" setup>
+// прикрутити телеграм бота треба, сервак
 import type { IDay } from "~/TS/Calendar";
-
+const emit = defineEmits(["selectDates"]);
 const daysInWeek = 7;
 const cellCount = 42;
 const firstMounth = 1;
@@ -44,12 +45,7 @@ const lastDaysOfPrevMonth = computed(() =>
 const freeCellCount = computed(() => cellCount - lastDayOfMounth.value);
 const startIndex = ref();
 const endIndex = ref();
-watch(
-  () => [startIndex.value, endIndex.value],
-  (v) => {
-    console.log(v);
-  }
-);
+
 const calendarMounthDays = computed(() => {
   let arr = Array.from({ length: lastDayOfMounth.value }, (_, i) => {
     return {
@@ -94,25 +90,13 @@ const calendarMounthDays = computed(() => {
     if (stringDay === stringStart) {
       dayWithSelectedFlag.selected = true;
       startIndex.value = index;
-      console.log("first if");
     } else if (stringDay === stringEnd) {
       dayWithSelectedFlag.selected = true;
       endIndex.value = index;
-      console.log("else if");
     } else {
       dayWithSelectedFlag.selected = false;
-      console.log("else");
     }
-    // треба пеперобити шось шоб старт була маньша дата , а енд більша дата
-    // if (
-    //   startIndex.value &&
-    //   endIndex.value &&
-    //   startIndex.value < index &&
-    //   endIndex.value > index
-    // ) {
-    //   console.log("works");
-    //   dayWithSelectedFlag.selected = true;
-    // }
+
     return dayWithSelectedFlag;
   });
 
@@ -141,12 +125,25 @@ const onDayClick = (day: IDay) => {
     selectedStatus.value.secondDateSelected = false;
     clearDates();
   }
+
   if (!selectedStatus.value.firstDateSelected) {
-    selectedDates.value = { ...selectedDates.value, start: day };
+    selectedDates.value.start = day;
     selectedStatus.value.firstDateSelected = true;
   } else {
-    selectedDates.value = { ...selectedDates.value, end: day };
+    selectedDates.value.end = day;
     selectedStatus.value.secondDateSelected = true;
+    const start = selectedDates.value.start;
+    const end = selectedDates.value.end;
+    if (start && end) {
+      const startDate = new Date(start.year, start.mounth - 1, start.day);
+      const endDate = new Date(end.year, end.mounth - 1, end.day);
+
+      if (startDate > endDate) {
+        selectedDates.value.start = end;
+        selectedDates.value.end = start;
+      }
+      onSelectDates();
+    }
   }
 };
 
@@ -156,12 +153,10 @@ const clearDates = () => {
     end: null,
   };
 };
-watch(
-  () => selectedDates.value,
-  (value) => {
-    console.log(value);
-  }
-);
+
+const onSelectDates = () => {
+  emit("selectDates", toRaw(selectedDates.value));
+};
 </script>
 
 <style lang="scss">
