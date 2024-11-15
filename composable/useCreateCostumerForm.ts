@@ -47,7 +47,7 @@ export const useCreateCostumerForm = () => {
             },
           },
         });
-        
+
         const response = await app.$apiFetch(`/users/${formData.user.id}`, {
           method: "PUT",
           body: {
@@ -87,10 +87,6 @@ export const useCreateCostumerForm = () => {
             calendar_dates: calendarDates.data.id,
           },
         });
-
-        console.log(costumer);
-        console.log(response);
-        console.log(calendarDates.data);
       } catch (e) {}
     }
   };
@@ -100,7 +96,6 @@ export const useCreateCostumerForm = () => {
     filter_date: string;
     total_price: number;
     daysCount: number;
-    days: number[];
   }) => {
     selectedDates.value = toValue(date);
     showForm.value = true;

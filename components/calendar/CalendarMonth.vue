@@ -1,12 +1,16 @@
 <template>
-  <div class="calendar-mounth">
+  <div class="calendar-month">
     <calendar-day
       v-for="day of props.days"
-      :active="false"
       :day="day"
+      :selected="day.selected"
+      :disabled="day.disabled"
+      :startDate="day.startDate"
+      :endDate="day.endDate"
+      :reserved="day.reserved"
       @onClick="onDayClick"
+      @onReservedClick="onReservedDayClick"
     >
-      {{ day.day }}
     </calendar-day>
   </div>
 </template>
@@ -17,15 +21,20 @@ import type { IDay } from "~/TS/Calendar";
 interface IProps {
   days: Array<IDay>;
 }
+
 const props = defineProps<IProps>();
-const emit = defineEmits(["onDayClick"]);
+const emit = defineEmits(["onDayClick", "onReservedDayClick"]);
+
 const onDayClick = (day: IDay) => {
   emit("onDayClick", day);
+};
+const onReservedDayClick = (day: IDay) => {
+  emit("onReservedDayClick", day);
 };
 </script>
 
 <style lang="scss">
-.calendar-mounth {
+.calendar-month {
   display: grid;
   grid-template-columns: repeat(7, 85px);
   grid-template-rows: repeat(6, 85px);

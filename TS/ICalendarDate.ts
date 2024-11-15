@@ -1,7 +1,7 @@
 import type { ICostumer } from "./ICostumer";
 
 export interface ICalendarDate {
-  id: ID;
+  id: string | number;
   attributes: {
     filter_date: string;
     total_price: string;
@@ -13,8 +13,8 @@ export interface ICalendarDate {
   };
 }
 export interface ICalendarDateData {
-    data: ICalendarDate;
-  }
+  data: ICalendarDate;
+}
 export interface ICalendarDates {
   data: ICalendarDate[];
 }

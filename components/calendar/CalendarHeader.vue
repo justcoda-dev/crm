@@ -1,9 +1,9 @@
 <template>
   <div class="calendar-header">
     <div class="calendar-header__navigation">
-      <button @click="onPrevMounth"><</button>
-      <div>select mounth</div>
-      <button @click="onNextMounth">></button>
+      <button @click="onPrevMonth"><</button>
+      <div>select month</div>
+      <button @click="onNextMonth">></button>
     </div>
     <div><slot></slot></div>
     <div class="calendar-header__days">
@@ -23,11 +23,11 @@ const days = [
   "sunday",
 ];
 const emit = defineEmits();
-const onPrevMounth = () => {
-  emit("prevMounth");
+const onPrevMonth = () => {
+  emit("prevMonth");
 };
-const onNextMounth = () => {
-  emit("nextMounth");
+const onNextMonth = () => {
+  emit("nextMonth");
 };
 </script>
 
