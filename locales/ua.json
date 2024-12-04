@@ -2,6 +2,8 @@
   "menuItem.calendar": "Календар",
   "menuItem.options": "Налаштування",
   "menuItem.costumers-list": "Список клієнтів",
+  "menuItem.reports": "Звіти",
+  "menuItem.hotels": "Готелі",
   "mainTitle": "Hotel CRM ",
   "unknownError": "Щось пішло не так :(",
   "header.menuItem.clients": "База клієнтів",

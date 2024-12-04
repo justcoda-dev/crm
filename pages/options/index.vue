@@ -2,12 +2,13 @@
   <v-container class="py-4">
     <v-row>
       <v-col>
-        <options-card
-          v-for="(optionItem, index) of optionsData"
-          class="options-card__price ma-2"
-          :item="optionItem"
-          @onSave="onSaveClick"
-        ></options-card>
+        <template v-for="optionItem of optionsData" :key="optionItem.id">
+          <options-card
+            class="options-card__price ma-2"
+            :item="optionItem"
+            @onSave="onSaveClick(optionItem)"
+          />
+        </template>
       </v-col>
     </v-row>
   </v-container>
@@ -15,32 +16,29 @@
 
 <script lang="ts" setup>
 import OptionsCard from "~/components/cards/OptionsCard.vue";
+import type { IOption, IOptionsData } from "~/TS/IOption";
 const app = useNuxtApp();
-const { t } = useI18n();
 
-const { data: options, refresh: refreshOptions } = await app.$useApiFetch(
-  "/options?populate=*"
-);
+const { data: options, refresh: refreshOptions } =
+  await app.$useApiFetch<IOptionsData>("/options?populate=*");
 
 const optionsData = computed(() => {
   if (options.value) {
     return options.value.data
-      .map((option) => {
-        return { ...option.attributes, id: option.id };
-      })
+      .map((option) => ({ ...option, id: option.id }))
       .sort((a, b) => a.id - b.id);
   } else {
     return [];
   }
 });
 
-const onSaveClick = (value: any) => {
+const onSaveClick = (optionItem: IOption) => {
   try {
-    app.$apiFetch(`options/${value.id}`, {
+    app.$apiFetch(`options/${optionItem.id}`, {
       method: "PUT",
       body: {
         data: {
-          ...value,
+          ...optionItem,
         },
       },
     });

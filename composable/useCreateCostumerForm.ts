@@ -1,6 +1,16 @@
-import type { ICostumerData, ICostumers } from "~/TS/ICostumer";
-import type { ICalendarDateData, ICalendarDates } from "~/TS/ICalendarDate";
+import type { ICostumer, ICostumerData, ICostumersData } from "~/TS/ICostumer";
+import type { ICalendarDates } from "~/TS/ICalendarDate";
 import type { ID } from "~/TS/myTypes";
+import type { IHotel } from "~/TS/IHotel";
+export interface ICreateingCalendarDate {
+  start: string;
+  end: string;
+  filter_date: string;
+  total_price: number;
+  daysCount: number;
+  hotel?: ID;
+  enterprice?: ID;
+}
 export const useCreateCostumerForm = () => {
   const app = useNuxtApp();
   const showForm = ref(false);
@@ -9,94 +19,82 @@ export const useCreateCostumerForm = () => {
   const onCancelForm = () => {
     showForm.value = false;
   };
-
-  const onSubmitForm = async (formData: {
+  // перерробити на простий пат зарос, і передавати юзера з форми данні
+  const onSubmitForm = async (formDataCostumer: {
     name: string;
     phone: string;
-    userFromDb: boolean;
-    userId: ID;
-    user: any;
+    costumerFromDb: boolean;
+    user: ID;
+    costumerId: ID;
+    hotel: ID;
+    id: ID;
+    enterprise: ID;
   }) => {
+    console.log(formDataCostumer);
     showForm.value = false;
-    if (formData.userFromDb) {
-      try {
-        const [calendarDates, costumerFromDbWithDates] = await Promise.all([
-          app.$apiFetch<ICalendarDates>("/calendar-dates", {
-            method: "POST",
-            body: {
-              data: {
-                ...selectedDates.value,
-              },
-            },
-          }),
-          app.$apiFetch<ICostumerData>(
-            `/costumers/${formData.userId}?populate=*`
-          ),
-        ]);
-
-        await app.$apiFetch<ICostumers>(`/costumers/${formData.userId}`, {
-          method: "PUT",
+    try {
+      console.log(selectedDates.value, formDataCostumer);
+      const { data: calendarDates } = await app.$apiFetch<ICalendarDates>(
+        "/calendar-dates",
+        {
+          method: "POST",
           body: {
             data: {
-              name: formData.name,
-              phone: formData.phone,
-              calendar_dates: [
-                calendarDates.data,
-                ...costumerFromDbWithDates.data.attributes.calendar_dates.data,
-              ],
+              ...selectedDates.value,
+              user: formDataCostumer.user,
+              hotel: formDataCostumer.hotel,
             },
           },
-        });
+        }
+      );
 
-        const response = await app.$apiFetch(`/users/${formData.user.id}`, {
-          method: "PUT",
-          body: {
-            calendar_dates: calendarDates.data.id,
-          },
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      try {
-        const calendarDates = await app.$apiFetch<ICalendarDateData>(
-          "/calendar-dates",
+      if (formDataCostumer.costumerFromDb) {
+        const { data: costumerFromDb } = await app.$apiFetch<ICostumerData>(
+          `costumers/${formDataCostumer.id}?populate=*`
+        );
+
+        await app.$apiFetch<ICostumersData>(
+          `/costumers/${formDataCostumer.id}`,
           {
-            method: "POST",
+            method: "PUT",
             body: {
               data: {
-                ...selectedDates.value,
+                name: formDataCostumer.name,
+                phone: formDataCostumer.phone,
+                hotels: costumerFromDb.hotels.every(
+                  (hotel: { id: ID }) => hotel.id !== formDataCostumer.hotel
+                )
+                  ? [...costumerFromDb.hotels, formDataCostumer.hotel]
+                  : [...costumerFromDb.hotels],
+                user: formDataCostumer.user,
+                calendar_dates: [
+                  ...costumerFromDb.calendar_dates,
+                  calendarDates.id,
+                ],
               },
             },
           }
         );
-        const costumer = await app.$apiFetch<ICostumers>("/costumers", {
+      } else {
+        await app.$apiFetch<ICostumersData>("/costumers", {
           method: "POST",
           body: {
             data: {
-              ...formData,
-              calendar_dates: calendarDates?.data.id,
+              ...formDataCostumer,
+              hotels: formDataCostumer.hotel,
+              user: formDataCostumer.user,
+              calendar_dates: calendarDates.id,
             },
           },
         });
-
-        const response = await app.$apiFetch(`/users/${formData.user.id}`, {
-          method: "PUT",
-          body: {
-            costumers: costumer.data.id,
-            calendar_dates: calendarDates.data.id,
-          },
-        });
-      } catch (e) {}
+      }
+    } catch (e) {
+      console.error("user create form error", e);
     }
   };
-  const onShowForm = (date: {
-    start: string;
-    end: string;
-    filter_date: string;
-    total_price: number;
-    daysCount: number;
-  }) => {
+
+  const onShowForm = (date: ICreateingCalendarDate) => {
+    console.log(date);
     selectedDates.value = toValue(date);
     showForm.value = true;
   };

@@ -21,11 +21,11 @@
       </template>
     </v-combobox>
     <v-combobox
-      :label="$t('text-field.phone.placeholder')"
       v-model.trim="form.model.value.phone"
-      :error-messages="form.errorMessages.value?.phone"
+      :label="$t('text-field.phone.placeholder')"
+      :error-messages="form.errorMessages.value.phone"
     />
-    <v-btn type="submit" class="ml-4" :disabled="disabledSubmitButton">
+    <v-btn class="ml-4" type="submit" :disabled="disabledSubmitButton">
       {{ $t("button-submit") }}
     </v-btn>
     <v-btn class="ml-4" @click="onCancel">
@@ -37,8 +37,9 @@
 <script lang="ts" setup>
 import type { ICostumer } from "~/TS/ICostumer";
 import { useValidation } from "~/functions/useValidation";
-
-const emit = defineEmits();
+import { useMyUserStore } from "~/store/user";
+import { requestFiltersCreator } from "../../functions/requestFiltersCreate";
+const emit = defineEmits(["submitForm", "cancelCLick"]);
 const app = useNuxtApp();
 
 const debounceTimeMs = 300;
@@ -46,25 +47,26 @@ const debounceTimeMs = 300;
 const initialForm = {
   name: "",
   phone: "",
-  userFromDb: false,
-  userId: null,
+  costumerFromDb: false,
+  id: null,
 };
-
+const costumersFromDb = ref<ICostumer[]>();
 const menuState = ref(false);
 const disabledSubmitButton = ref(true);
 const hideNoData = ref(false);
-const costumersFromDb = ref<ICostumer[]>([]);
 const userWantToCreateCostumer = ref(false);
 
 const costumersList = computed(() => {
   if (costumersFromDb.value?.length) {
     return costumersFromDb.value.map((item: ICostumer) => {
       return {
-        title: item.attributes.name,
+        title: item.name,
         id: item.id,
-        phone: item.attributes.phone,
+        phone: item.phone,
       };
     });
+  } else {
+    return [];
   }
 });
 
@@ -90,18 +92,18 @@ const form = useValidation(initialForm, [
         errorMessage: "Номер телефону мітить біль 13 символів",
       },
       {
-        fn: (value: string) => +value,
+        fn: (value: string) => value,
         errorMessage: "Номер складається тільки з цифер",
       },
     ],
   },
 ]);
 
-const selectCostumerFromDb = (item: any) => {
-  form.model.value.userFromDb = true;
-  form.model.value.name = item.title;
-  form.model.value.phone = item.raw.phone;
-  form.model.value.userId = item.raw.id;
+const selectCostumerFromDb = (costumer: any) => {
+  form.model.value.costumerFromDb = true;
+  form.model.value.name = costumer.title;
+  form.model.value.phone = costumer.raw.phone;
+  form.model.value.id = costumer.raw.id;
   nextTick(() => {
     disabledSubmitButton.value = false;
     menuState.value = false;
@@ -110,7 +112,7 @@ const selectCostumerFromDb = (item: any) => {
 
 const selectCreateNewCostumer = () => {
   menuState.value = false;
-  form.model.value.userFromDb = false;
+  form.model.value.costumerFromDb = false;
   userWantToCreateCostumer.value = true;
 };
 
@@ -126,12 +128,18 @@ const onCancel = () => {
 watch(
   () => form.model.value.name,
   _debounce(async (name) => {
+    const userStore = useMyUserStore();
+
     try {
-      if (name?.length > 3 && !form.model.value.userFromDb) {
-        const { data }: any = await app.$apiFetch(
-          `/costumers?filters[name][$containsi]=${name}`
+      if (name?.length > 3 && !form.model.value.costumerFromDb) {
+        const { data: costumer }: any = await app.$apiFetch(
+          `/costumers?filters[name][$containsi]=${name}&${requestFiltersCreator(
+            userStore.userHotels.map((hotel) => hotel.id),
+            "hotels"
+          )}`
         );
-        costumersFromDb.value = data;
+
+        costumersFromDb.value = costumer;
       }
     } catch (e) {
       console.error("create form watcher err", e);

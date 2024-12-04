@@ -2,42 +2,35 @@
   <v-card>
     <v-card-actions>
       <v-btn color="primary" outlined @click="onCreateNew">
-        {{ $t('button-create.new-costumer') }}
+        {{ $t("button-create.new-costumer") }}
       </v-btn>
       <v-btn color="primary" outlined @click="onCreate">
-        {{ $t('button-create.costumer') }}
+        {{ $t("button-create.costumer") }}
       </v-btn>
       <v-btn color="primary" outlined @click="onCancel">
-        {{ $t('button-cancel') }}
+        {{ $t("button-cancel") }}
       </v-btn>
     </v-card-actions>
   </v-card>
 </template>
 
 <script lang="ts" setup>
+interface IProps {}
 
-interface IProps {
-}
+const props = defineProps<IProps>();
+const emit = defineEmits(["createNewCostumer", "createCostumer", "cancel"]);
 
-const props = defineProps<IProps>()
-const emit = defineEmits()
-
-const show = ref()
+const show = ref();
 
 const onCreateNew = () => {
-  emit("createNewCostumer")
-}
+  emit("createNewCostumer");
+};
 const onCreate = () => {
-  emit("createCostumer")
-}
+  emit("createCostumer");
+};
 const onCancel = () => {
-  emit("cancel")
-}
-const onClick = (e) => {
-}
-
+  emit("cancel");
+};
 </script>
 
-<style lang="scss" scoped>
-
-</style>
+<style lang="scss" scoped></style>

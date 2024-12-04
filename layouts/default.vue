@@ -10,40 +10,34 @@
 </template>
 <script lang="ts" setup>
 import { useMyUserStore } from "~/store/user";
-const store = useMyUserStore();
-const { user } = storeToRefs(store);
+
+const userStore = useMyUserStore();
+const { user } = storeToRefs(userStore);
+await userStore.getUser();
 
 const headerMenuList = ref([
   {
     id: 1,
-    path: "/calendar",
-    title: "menuItem.calendar",
-    iconName: "mdi-view-dashboard",
-  },
-  {
-    id: 2,
     path: "/costumers-list",
     title: "menuItem.costumers-list",
     iconName: "mdi-view-dashboard",
+    type: "list-item",
   },
   {
-    id: 3,
+    id: 2,
     path: "/options",
     title: "menuItem.options",
     iconName: "mdi-view-dashboard",
+    type: "list-item",
+  },
+
+  {
+    id: 3,
+    path: "/reports",
+    title: "menuItem.reports",
+    iconName: "mdi-view-dashboard",
+    type: "list-item",
   },
 ]);
-
-onMounted(async () => {
-  const localUser = window.localStorage.getItem("user");
-
-  if (!user.value && localUser) {
-    user.value = JSON.parse(localUser);
-  } else if (user.value) {
-    return;
-  } else {
-    await store.getUser();
-  }
-});
 </script>
 <style scoped></style>

@@ -6,6 +6,10 @@ export default defineNuxtConfig({
   build: {
     transpile: ["vuetify"],
   },
+  devServer: {
+    host: "0.0.0.0",
+  },
+
   vite: {
     vue: {
       template: {
@@ -28,19 +32,19 @@ export default defineNuxtConfig({
     },
   },
   devtools: { enabled: true },
-    modules: [
-      "@samk-dev/nuxt-vcalendar",
-      "nuxt-lodash",
-      "@pinia/nuxt",
-      "@nuxtjs/i18n",
-      "@nuxt/eslint",
-      (_options, nuxt) => {
-        nuxt.hooks.hook("vite:extendConfig", (config) => {
-          // @ts-expect-error
-          config.plugins.push(vuetify({ autoImport: true }));
-        });
-      },
-    ],
+  modules: [
+    "@samk-dev/nuxt-vcalendar",
+    "nuxt-lodash",
+    "@pinia/nuxt",
+    "@nuxtjs/i18n",
+    "@nuxt/eslint",
+    (_options, nuxt) => {
+      nuxt.hooks.hook("vite:extendConfig", (config) => {
+        // @ts-expect-error
+        config.plugins.push(vuetify({ autoImport: true }));
+      });
+    },
+  ],
   lodash: {
     prefix: "_",
     prefixSkip: ["string"],
@@ -56,5 +60,5 @@ export default defineNuxtConfig({
     vueI18n: "./TS/i18.config.ts",
   },
   // @ts-ignore
-  css: ["vuetify/dist/vuetify.css"],
+  css: ["vuetify/dist/vuetify.css", "assets/styles/global.css"],
 });

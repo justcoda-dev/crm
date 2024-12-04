@@ -2,26 +2,26 @@
   <div
     class="calendar-day"
     :class="{
-      selected: props.selected,
-      disabled: props.disabled,
-      reserved: props.reserved,
+      selected: props.day.selected,
+      disabled: props.day.disabled,
+      reserved: props.day.reserved,
     }"
     @click="onDayClick"
   >
     <span class="calendar-day__day">{{ day.day }}</span>
     <div
-      v-if="props.endDate"
-      @click="onReservedClick"
-      :class="{ end: props.endDate }"
+      v-if="props.day.endDate"
+      @click.stop="onReservedLeaveClick"
+      :class="{ end: props.day.endDate }"
     >
-      Виїжає
+      <span>Виїзд</span>
     </div>
     <div
-      v-if="props.startDate"
-      @click="onReservedClick"
-      :class="{ start: props.startDate }"
+      v-if="props.day.startDate"
+      @click.stop="onReservedEnterClick"
+      :class="{ start: props.day.startDate }"
     >
-      Заїжає
+      <span>Заїзд</span>
     </div>
 
     <slot></slot>
@@ -29,29 +29,25 @@
 </template>
 
 <script lang="ts" setup>
-import type { IDay } from "~/TS/Calendar";
+import type { IDay } from "~/TS/IDay";
 
 interface IProps {
   day: IDay;
-  reserved?: boolean;
-  disabled?: boolean;
-  selected?: boolean;
-  startDate?: boolean;
-  endDate?: boolean;
 }
 
 const props = defineProps<IProps>();
 
 const emit = defineEmits(["onClick", "onReservedClick"]);
 const onDayClick = () => {
-  if (!props.disabled) {
+  if (!props.day.disabled && !props.day.selected) {
     emit("onClick", { ...props.day });
   }
 };
-const onReservedClick = () => {
-  if (props.endDate || props.startDate) {
-    emit("onReservedClick", { ...props.day });
-  }
+const onReservedEnterClick = () => {
+  emit("onReservedClick", { ...props.day, enter: true });
+};
+const onReservedLeaveClick = () => {
+  emit("onReservedClick", { ...props.day, enter: false });
 };
 </script>
 
@@ -62,35 +58,54 @@ const onReservedClick = () => {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.262);
   text-align: start;
   position: relative;
-  // aspect-ratio: 1/1;
+
   &__day {
     position: absolute;
     z-index: 1;
   }
 }
 .selected {
-  background: red !important;
+  background: #ffca28 !important;
 }
 .disabled {
   pointer-events: none;
-  opacity: 0.4;
+  opacity: 0.3;
 }
 .reserved {
-  background: rgba(0, 0, 255, 0.753);
+  background: #0091ea;
 }
 .start {
   position: absolute;
   bottom: 0;
   height: 50%;
   width: 100%;
-  background: purple;
+  background: #26a69a;
+  font-weight: 700;
+  @media screen and (max-width: 600px) {
+    font-size: 10px;
+    & span {
+      position: absolute;
+      left: 20%;
+      top: 20%;
+    }
+  }
 }
 .end {
   position: absolute;
   top: 0;
   height: 50%;
   width: 100%;
-  background: greenyellow;
+  background: #e65100;
   text-indent: 30%;
+  font-weight: 700;
+
+  @media screen and (max-width: 600px) {
+    font-size: 10px;
+    & span {
+      position: absolute;
+      left: 20%;
+      top: 20%;
+    }
+  }
 }
 </style>

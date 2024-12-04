@@ -3,12 +3,13 @@
     <v-card-item>
       <v-card-text>
         <v-list class="ma-2">
-          <h3>{{ itemCopy.group_title }}</h3>
+          {{ props.item }}
           <template v-for="type of itemKeys">
             <v-list-item>
               <v-row>
                 <template v-for="(optionItem, index) of itemCopy[type]">
                   <v-col>
+                    {{ optionItem }}
                     <options-card-item
                       @onSave="onSaveClick(index, $event)"
                       :type="type"
@@ -39,34 +40,34 @@ const emit = defineEmits();
 
 const { t } = useI18n();
 
-const itemCopy = ref(
-  _cloneDeep({
-    ...props.item,
-  })
-);
+// const itemCopy = ref(
+//   _cloneDeep({
+//     ...props.item,
+//   })
+// );
 
-const itemKeys = computed(() => {
-  if (itemCopy.value) {
-    return Object.entries(itemCopy.value)
-      .map(([key, value]) => {
-        if (Array.isArray(value) && value.length) {
-          return key;
-        }
-      })
-      .filter((value) => value !== undefined);
-  } else {
-    return [];
-  }
-});
+// const itemKeys = computed(() => {
+//   if (itemCopy.value) {
+//     return Object.entries(itemCopy.value)
+//       .map(([key, value]) => {
+//         if (Array.isArray(value) && value.length) {
+//           return key;
+//         }
+//       })
+//       .filter((value) => value !== undefined);
+//   } else {
+//     return [];
+//   }
+// });
 
-const onSaveClick = (
-  index: number,
-  { value, type }: { value: any; type: string }
-) => {
-  itemCopy.value[type].splice(index, 1, { ...value });
+// const onSaveClick = (
+//   index: number,
+//   { value, type }: { value: any; type: string }
+// ) => {
+//   itemCopy.value[type].splice(index, 1, { ...value });
 
-  emit("onSave", { ...itemCopy.value });
-};
+//   emit("onSave", { ...itemCopy.value });
+// };
 </script>
 
 <style></style>

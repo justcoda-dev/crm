@@ -1,4 +1,5 @@
 import { type UseFetchOptions } from "nuxt/app";
+
 export default defineNuxtPlugin((nuxtApp) => {
   const {
     public: { apiBase },
@@ -10,6 +11,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     baseURL: `${apiBase}/api`,
     async onRequest({ options }) {
       const jwt = getJwt();
+
       if (jwt) {
         options.headers = {
           ...options.headers,
@@ -18,10 +20,10 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
     },
   });
-  const useApiFetch = async <T>(
+  const useApiFetch = async <DataT>(
     url: string | (() => string),
-    options: UseFetchOptions<T> = {}
-  ) => useFetch(url, { ...options, $fetch: apiFetch });
+    options?: UseFetchOptions<DataT>
+  ) => useFetch(url, { ...options, $fetch: apiFetch as typeof $fetch });
 
   return {
     provide: {

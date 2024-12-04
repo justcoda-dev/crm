@@ -9,5 +9,6 @@ export interface IDay {
   endDate: boolean;
   disabled: boolean;
   index: number;
-  costumer: any;
+  costumerEnter: any;
+  costumerLeave: any;
 }

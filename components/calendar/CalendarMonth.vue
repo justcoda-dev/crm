@@ -1,25 +1,21 @@
 <template>
   <div class="calendar-month">
-    <calendar-day
-      v-for="day of props.days"
-      :day="day"
-      :selected="day.selected"
-      :disabled="day.disabled"
-      :startDate="day.startDate"
-      :endDate="day.endDate"
-      :reserved="day.reserved"
-      @onClick="onDayClick"
-      @onReservedClick="onReservedDayClick"
-    >
-    </calendar-day>
+    <template v-for="day of props.days" :key="day.id">
+      <calendar-day
+        :day="day"
+        @onClick="onDayClick"
+        @onReservedClick="onReservedDayClick"
+      >
+      </calendar-day>
+    </template>
   </div>
 </template>
 
 <script lang="ts" setup>
-import type { IDay } from "~/TS/Calendar";
+import type { IDay } from "~/TS/IDay";
 
 interface IProps {
-  days: Array<IDay>;
+  days: IDay[];
 }
 
 const props = defineProps<IProps>();
@@ -39,5 +35,9 @@ const onReservedDayClick = (day: IDay) => {
   grid-template-columns: repeat(7, 85px);
   grid-template-rows: repeat(6, 85px);
   gap: 1px;
+  @media screen and (max-width: 600px) {
+    grid-template-columns: repeat(7, 52px);
+    grid-template-rows: repeat(6, 52px);
+  }
 }
 </style>

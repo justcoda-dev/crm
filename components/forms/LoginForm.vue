@@ -11,11 +11,11 @@
       </div>
       <v-text-field
         density="compact"
-        :placeholder="$t('text-field.email.placeholder')"
-        :error-messages="emailError"
         prepend-inner-icon="mdi-email-outline"
         variant="outlined"
         v-model="form.model.value.email"
+        :placeholder="$t('text-field.email.placeholder')"
+        :error-messages="emailError"
       />
       <div
         class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
@@ -31,15 +31,15 @@
         </a>
       </div>
       <v-text-field
+        density="compact"
+        prepend-inner-icon="mdi-lock-outline"
+        variant="outlined"
+        v-model="form.model.value.password"
         :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
         :error-messages="passwordError"
         :type="visible ? 'text' : 'password'"
-        density="compact"
         :placeholder="$t('text-field.password.placeholder')"
-        prepend-inner-icon="mdi-lock-outline"
-        variant="outlined"
         @click:append-inner="visible = !visible"
-        v-model="form.model.value.password"
       />
 
       <v-card
@@ -60,6 +60,7 @@
         variant="tonal"
         type="submit"
         :disabled="submitDisabled"
+        :loading="props.loading"
       >
         {{ $t("button-login") }}
       </v-btn>
@@ -80,7 +81,6 @@
 </template>
 <script lang="ts" setup>
 import { useValidation } from "~/functions/useValidation";
-import RegistrationForm from "./RegistrationForm.vue";
 
 export interface ILoginFormData {
   email: string;
@@ -88,22 +88,30 @@ export interface ILoginFormData {
 }
 interface IProps {
   errorMessage?: any;
+  loading?: boolean;
 }
 const props = defineProps<IProps>();
-const emit = defineEmits();
+const emit = defineEmits(["onSubmit", "update:changeComponent"]);
 const visible = ref(false);
+const submitDisabled = ref(true);
 
 const form = useValidation({ email: "", password: "" }, [
   {
     prop: "email",
     rules: [
-      { fn: (value: string) => value.length > 3, errorMessage: "to small" },
+      {
+        fn: (value: string) => value.length > 3,
+        errorMessage: "Пошта повинен містити більше 3х символів",
+      },
     ],
   },
   {
     prop: "password",
     rules: [
-      { fn: (value: string) => value.length > 3, errorMessage: "to small" },
+      {
+        fn: (value: string) => value.length > 4,
+        errorMessage: "Пароль повинен містити більше 4х символів",
+      },
     ],
   },
 ]);
@@ -118,14 +126,12 @@ const passwordError = computed(() =>
     ? form.errorMessages.value.password[0]
     : ""
 );
-const submitDisabled = ref(true);
 
 const onSubmit = () => {
   emit("onSubmit", form.model.value);
-  console.log(form.model.value);
 };
 const onChangeForm = () => {
-  emit("update:changeComponent", RegistrationForm);
+  emit("update:changeComponent", "RegistrationForm");
 };
 watch(
   () => [form.model.value.email, form.model.value.password],
@@ -133,12 +139,6 @@ watch(
     if (email && password) {
       submitDisabled.value = !!passwordError.value || !!emailError.value;
     }
-  }
-);
-watch(
-  () => props.errorMessage,
-  (value) => {
-    console.log(props);
   }
 );
 </script>

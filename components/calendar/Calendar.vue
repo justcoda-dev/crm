@@ -1,8 +1,11 @@
 <template>
-  <div class="calendar">
-    <calendar-header @prevMonth="onPrevMonth" @nextMonth="onNextMonth">
-      {{ currMonth }}
-      {{ currYear }}
+  <div class="d-flex flex-column align-center">
+    <calendar-header
+      class="calendar__header"
+      @prevMonth="onPrevMonth"
+      @nextMonth="onNextMonth"
+    >
+      {{ currMonth }}/{{ currYear }}
     </calendar-header>
     <calendar-month
       @onDayClick="onDayClick"
@@ -14,15 +17,16 @@
 
 <script lang="ts" setup>
 // прикрутити телеграм бота треба, сервак
-// first and last dates shouldnt be disabled
+
 import { fullDateConvertor } from "~/functions/fullDateConvertor";
-import type { IDay } from "~/TS/Calendar";
+import type { ICalendarDate } from "~/TS/ICalendarDate";
+import type { IDay } from "~/TS/IDay";
 interface IProps {
-  reservedDates?: any[];
+  reservedDates?: ICalendarDate[];
   defaultDate?: string;
 }
-
 const props = defineProps<IProps>();
+
 const emit = defineEmits(["selectDates", "changeMonth", "onReservedDayClick"]);
 const daysInWeek = 7;
 const cellCount = 42;
@@ -130,7 +134,7 @@ const initialCalendarPageDates = computed(() => {
 });
 
 const calendarPageDatesWithState = computed(() => {
-  const datesWithState: IDay[] = initialCalendarPageDates.value.map((date) => {
+  const datesWithState = initialCalendarPageDates.value.map((date) => {
     const calendarDate = new Date(
       date.year,
       date.month - 1,
@@ -140,50 +144,67 @@ const calendarPageDatesWithState = computed(() => {
     const selected =
       calendarDate === selectedStartDate.value?.getTime() ||
       calendarDate === selectedEndDate.value?.getTime();
-
-    const stateStatusFromDb = props.reservedDates?.reduce(
-      (acc, currentDate) => {
-        const startDateFromDb = fullDateConvertor(
-          currentDate.attributes.start
-        ).getTime();
-
-        const endDateFromDb = fullDateConvertor(
-          currentDate.attributes.end
-        ).getTime();
-
-        const reserved =
-          calendarDate >= startDateFromDb && calendarDate <= endDateFromDb;
-        const startDate = calendarDate === startDateFromDb;
-        const endDate = calendarDate === endDateFromDb;
-        const disabled = reserved && !startDate && !endDate;
-
-        return {
-          startDate: startDate || acc.startDate,
-          endDate: endDate || acc.endDate,
-          reserved: reserved || acc.reserved,
-          disabled: disabled || acc.disabled,
-          costumer:
-            currentDate.attributes.costumer.data.attributes ||
-            acc.attributes.costumer.data.attributes,
-        };
-      },
-      {
-        reserved: false,
-        startDate: false,
-        endDate: false,
-        disabled: false,
-        costumer: {},
-      }
-    );
-    return {
-      ...date,
-      ...stateStatusFromDb,
-      selected,
+    const stateStatusInitial = {
+      reserved: false,
+      startDate: false,
+      endDate: false,
+      disabled: false,
+      costumerEnter: {},
+      costumerLeave: {},
     };
+
+    if (props.reservedDates?.length) {
+      const stateStatusFromDb = props.reservedDates.reduce(
+        (acc, currentDate) => {
+          const startDateFromDb = fullDateConvertor(
+            currentDate.start
+          ).getTime();
+
+          const endDateFromDb = fullDateConvertor(currentDate.end).getTime();
+
+          const reserved =
+            calendarDate >= startDateFromDb && calendarDate <= endDateFromDb;
+          const startDate = calendarDate === startDateFromDb;
+          const endDate = calendarDate === endDateFromDb;
+          const disabled = reserved && !startDate && !endDate;
+
+          return {
+            startDate: startDate || acc.startDate,
+            endDate: endDate || acc.endDate,
+            reserved: reserved || acc.reserved,
+            disabled: disabled || acc.disabled,
+            costumerEnter: startDate
+              ? {
+                  id: currentDate.costumer.id,
+                  data: currentDate.costumer,
+                }
+              : acc.costumerEnter,
+            costumerLeave: endDate
+              ? {
+                  id: currentDate.costumer.id,
+                  data: currentDate.costumer,
+                }
+              : acc.costumerLeave,
+          };
+        },
+        stateStatusInitial
+      );
+      return {
+        ...date,
+        ...stateStatusFromDb,
+        selected,
+      };
+    } else {
+      return {
+        ...date,
+        ...stateStatusInitial,
+        selected,
+      };
+    }
   });
   return datesWithState;
 });
-console.log(calendarPageDatesWithState);
+
 const calendarPageDates = computed(() => {
   if (selectedStartDate.value) {
     const selectedStartDateUTC = selectedStartDate.value.getTime();
@@ -191,10 +212,11 @@ const calendarPageDates = computed(() => {
     const disabledDatesBeforeSelected = calendarPageDatesWithState.value.filter(
       (date) => {
         const dateUTC = fullDateConvertor(date.fullDate).getTime();
-        if (date.startDate || date.endDate) {
-          if (selectedStartDateUTC > dateUTC) {
-            return date;
-          }
+        if (selectedStartDateUTC > dateUTC && date.endDate) {
+          return date;
+        }
+        if (selectedDates.value.start?.endDate) {
+          return date;
         }
       }
     );
@@ -203,7 +225,10 @@ const calendarPageDates = computed(() => {
       (date) => {
         const dateUTC = fullDateConvertor(date.fullDate).getTime();
         if (date.startDate || date.endDate) {
-          if (selectedStartDateUTC < dateUTC) {
+          if (selectedStartDateUTC < dateUTC && date.startDate) {
+            return date;
+          }
+          if (selectedDates.value.start?.startDate) {
             return date;
           }
         }
@@ -235,7 +260,7 @@ const calendarPageDates = computed(() => {
     return calendarPageDatesWithState.value.map((date) => {
       const dateUTC = fullDateConvertor(date.fullDate).getTime();
 
-      if (dateUTC <= prevUnavailableDate || dateUTC >= nextUnavailableDate) {
+      if (dateUTC < prevUnavailableDate || dateUTC > nextUnavailableDate) {
         return { ...date, disabled: true };
       } else {
         return date;
@@ -246,10 +271,6 @@ const calendarPageDates = computed(() => {
   }
 });
 
-watch(
-  () => calendarPageDates.value,
-  (value) => {}
-);
 const onPrevMonth = () => {
   if (currMonth.value > 1) {
     currMonth.value = currMonth.value - 1;
@@ -285,9 +306,7 @@ const clearDates = () => {
 };
 
 const onSelectDates = () => {
-  console.log("before");
   if (selectedStartDate.value && selectedEndDate.value) {
-    console.log("after");
     if (selectedStartDate.value > selectedEndDate.value) {
       const start = selectedDates.value.start;
       const end = selectedDates.value.end;
@@ -313,13 +332,4 @@ watch(
   }
 );
 </script>
-
-<style lang="scss">
-.calendar {
-  height: 100%;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-</style>
+<style lang="scss" scoped></style>

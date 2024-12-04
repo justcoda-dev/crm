@@ -8,32 +8,37 @@
     return-object
   >
     <template #item.name="{ item }">
-      <NuxtLink :to="`${route.path}/costumer/${item.id}`">{{
-        item.name
-      }}</NuxtLink>
+      <NuxtLink @click="onClick(item.id)">
+        {{ item.name }}
+      </NuxtLink>
     </template>
   </v-data-table>
 </template>
 
 <script lang="ts" setup>
+import type { ICostumer } from "~/TS/ICostumer";
+import type { ID } from "~/TS/myTypes";
+
 interface IProps {
-  usersList: any[];
+  costumersList: ICostumer[];
   search: string;
 }
 const props = defineProps<IProps>();
 const selected = defineModel("selected");
-
 const { t } = useI18n();
-
 const route = useRoute();
-console.log(props.usersList);
+const router = useRouter();
+
+const onClick = (id: ID) => {
+  router.push({ path: `${route.path}/costumer`, query: { id } });
+};
 const items = computed(() => {
-  if (props.usersList.length) {
-    return props.usersList.map((item) => {
+  if (props.costumersList.length) {
+    return props.costumersList.map((item) => {
       return reactive({
         id: item.id,
-        name: item.attributes.name,
-        phone: item.attributes.phone,
+        name: item.name,
+        phone: item.phone,
       });
     });
   } else {

@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 
 export const useMyMobileStore = defineStore("myMobileStore", () => {
   const mobile = ref(false);
-  const mobileWidth = 500;
+  const mobileWidth = 600;
   const checkViewPort = () => {
     const debouncedFn = _debounce((event) => {
       if (window.innerWidth < mobileWidth) {

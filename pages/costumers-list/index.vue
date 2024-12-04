@@ -1,11 +1,11 @@
 <template>
   <v-container class="py-4">
-    <v-row :class="{ 'flex-column': mobileClass }">
+    <v-row :class="{ 'flex-column': mobile }">
       <v-col>
         <v-text-field
+          append-inner-icon="mdi-magnify"
           v-model="search"
           :label="$t('text-field.search')"
-          append-inner-icon="mdi-magnify"
         />
       </v-col>
       <v-col>
@@ -16,10 +16,10 @@
         }}</v-btn>
       </v-col>
     </v-row>
-    <users-table
-      :search="search"
+    <costumers-table
       v-model:selected="selected"
-      :usersList="costumersList"
+      :search="search"
+      :costumersList="costumersList"
     />
     <v-dialog v-model="showCreateCostumerForm">
       <v-card class="pa-4">
@@ -49,27 +49,39 @@
 </template>
 
 <script lang="ts" setup>
-import UsersTable from "../../components/tables/UsersTable.vue";
 import CreateCostumerForm from "../../components/forms/CreateCostumerForm.vue";
+import CostumersTable from "../../components/tables/CostumersTable.vue";
 import { useMyMobileStore } from "~/store/mobile";
-const app = useNuxtApp();
-const { mobile } = storeToRefs(useMyMobileStore());
-const mobileClass = computed(() => useMyMobileStore().mobile);
+import { useMyUserStore } from "~/store/user";
+import { requestFiltersCreator } from "~/functions/requestFiltersCreate";
+import type { ICostumer, ICostumerData, ICostumersData } from "~/TS/ICostumer";
+import type { ICalendarDate } from "~/TS/ICalendarDate";
 
-const {
-  data: costumers,
-  refresh: refreshCostumers,
-}: { data: any; refresh: any } = await app.$useApiFetch("/costumers");
+const app = useNuxtApp();
+const mobileStore = useMyMobileStore();
+const userStore = useMyUserStore();
+const { mobile } = storeToRefs(mobileStore);
+const { userHotels } = storeToRefs(userStore);
+const hotelsId = userHotels.value.map((hotel) => hotel.id);
+
+const { data: costumers, refresh: refreshCostumers } =
+  await app.$useApiFetch<ICostumersData>(
+    `/costumers?${requestFiltersCreator(hotelsId, "hotels")}`
+  );
 
 const search = ref("");
 const selected = ref([]);
-const selectedCostumerDates = ref<Date[]>([]);
+const selectedCostumerDates = ref<Date[]>();
 const showCreateCostumerForm = ref(false);
 const alertMessage = ref("");
 const showAlert = ref(false);
 
 const costumersList = computed(() => {
-  return costumers.value?.data;
+  if (costumers.value) {
+    return costumers.value.data;
+  } else {
+    return [];
+  }
 });
 const selectedCostumerDatesAndLinks = computed(() =>
   selectedCostumerDates.value.map((date: Date) => {
@@ -92,17 +104,18 @@ const onCancelCostumerCreateForm = () => {
 };
 const onDeleteCostumer = async () => {
   if (selected.value.length) {
-    selected.value.forEach(async (selectedCostumer) => {
-      const costumerDates = await app.$apiFetch(
+    selected.value.forEach(async (selectedCostumer: ICostumer) => {
+      const { data: costumer } = await app.$apiFetch<ICostumerData>(
         `/costumers/${selectedCostumer.id}?populate=*`
       );
-
-      if (costumerDates.data.attributes.calendar_dates.data.length) {
-        selectedCostumerDates.value =
-          costumerDates.data.attributes.calendar_dates.data.map((date) => {
-            const createdDate = new Date(date.attributes.start);
+      console.log(costumer);
+      if (costumer.calendar_dates.length) {
+        selectedCostumerDates.value = costumer.calendar_dates.map(
+          (date: ICalendarDate) => {
+            const createdDate = new Date(date.start);
             return createdDate;
-          });
+          }
+        );
 
         alertMessage.value = `Неможливо видалити користувача, так як є заброньовані дати поваязані з ним: `;
         showAlert.value = true;

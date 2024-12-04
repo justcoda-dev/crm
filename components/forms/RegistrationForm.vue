@@ -12,19 +12,21 @@
 
       <v-text-field
         density="compact"
-        :placeholder="$t('text-field.email.placeholder')"
         prepend-inner-icon="mdi-email-outline"
         variant="outlined"
         v-model="formData.email"
+        :placeholder="$t('text-field.email.placeholder')"
       />
-      <div class="text-subtitle-1 text-medium-emphasis">pidpryemstvo</div>
+      <div class="text-subtitle-1 text-medium-emphasis">
+        Сикретний код підприємства
+      </div>
 
       <v-text-field
         density="compact"
-        :placeholder="'vvedit pidpryemstvo'"
+        placeholder="Сикретний код підприємства"
         prepend-inner-icon="mdi-email-outline"
         variant="outlined"
-        v-model="formData.email"
+        v-model="formData.secret_key"
       />
       <div
         class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
@@ -33,14 +35,14 @@
       </div>
 
       <v-text-field
-        :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-        :type="visible ? 'text' : 'password'"
-        density="compact"
-        :placeholder="$t('text-field.password.placeholder')"
         prepend-inner-icon="mdi-lock-outline"
         variant="outlined"
-        @click:append-inner="visible = !visible"
+        density="compact"
         v-model="formData.password"
+        :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+        :type="visible ? 'text' : 'password'"
+        :placeholder="$t('text-field.password.placeholder')"
+        @click:append-inner="visible = !visible"
       />
       <div
         class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between"
@@ -49,14 +51,14 @@
       </div>
 
       <v-text-field
-        :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
-        :type="visible ? 'text' : 'password'"
-        density="compact"
-        :placeholder="$t('text-field.password-repeat.placeholder')"
         prepend-inner-icon="mdi-lock-outline"
         variant="outlined"
-        @click:append-inner="visible = !visible"
+        density="compact"
         v-model="formData.passwordRepeat"
+        :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+        :type="visible ? 'text' : 'password'"
+        :placeholder="$t('text-field.password-repeat.placeholder')"
+        @click:append-inner="visible = !visible"
       />
 
       <v-btn
@@ -66,6 +68,7 @@
         size="large"
         variant="tonal"
         type="submit"
+        :loading="props.loading"
       >
         {{ $t("button-register") }}
       </v-btn>
@@ -87,21 +90,26 @@
 </template>
 
 <script lang="ts" setup>
-import LoginForm from "./LoginForm.vue";
-
 export interface IRegistrationFormData {
   username: string;
   email: string;
   password: string;
   passwordRepeat: string;
+  secret_key: string;
 }
-const emit = defineEmits();
+interface IProps {
+  errorMessage?: any;
+  loading?: boolean;
+}
+const props = defineProps<IProps>();
+const emit = defineEmits(["onSubmit", "update:changeComponent"]);
 
 const visible = ref(false);
 
 const formData = ref<IRegistrationFormData>({
   username: "",
   email: "",
+  secret_key: "",
   password: "",
   passwordRepeat: "",
 });
@@ -111,7 +119,7 @@ const onSubmit = () => {
 };
 
 const onChangeForm = () => {
-  emit("update:changeComponent", LoginForm);
+  emit("update:changeComponent", "LoginForm");
 };
 watch(
   () => formData.value.email,
