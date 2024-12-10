@@ -1,36 +1,45 @@
 <template>
-  <v-form @submit.prevent="onSubmitForm">
-    <v-combobox
-      v-model="form.model.value.name"
-      v-model:menu="menuState"
-      :label="$t('text-field.name.placeholder')"
-      :items="costumersList"
-      :hide-no-data="hideNoData"
-      :error-messages="form.errorMessages.value?.name"
-    >
-      <template #item="{ item }">
-        <v-list-item @click="selectCostumerFromDb(item)">
-          {{ item.value }}
-        </v-list-item>
-      </template>
-      <template #no-data v-if="!hideNoData">
-        <v-list-item @click="selectCreateNewCostumer">
-          Клієнта "<b>{{ form.model.value.name }}</b
-          >" в базі не знайдено. Нажміть ентер або <b>сюди</b> щоб тсворити.
-        </v-list-item>
-      </template>
-    </v-combobox>
-    <v-combobox
-      v-model.trim="form.model.value.phone"
-      :label="$t('text-field.phone.placeholder')"
-      :error-messages="form.errorMessages.value.phone"
-    />
-    <v-btn class="ml-4" type="submit" :disabled="disabledSubmitButton">
-      {{ $t("button-submit") }}
-    </v-btn>
-    <v-btn class="ml-4" @click="onCancel">
-      {{ $t("button-cancel") }}
-    </v-btn>
+  <v-form @submit.prevent="onSubmitClick">
+    <v-card class="pa-4 justify-center">
+      <v-card-title>Створити клієнта</v-card-title>
+      <v-card-text class="px-8 py-2">
+        <v-combobox
+          variant="underlined"
+          v-model="form.model.value.name"
+          v-model:menu="menuState"
+          :label="$t('text-field.name.placeholder')"
+          :items="costumersList"
+          :hide-no-data="hideNoData"
+          :error-messages="form.errorMessages.value?.name"
+        >
+          <template #item="{ item }">
+            <v-list-item @click="selectCostumerFromDb(item.raw.costumer)">
+              {{ item.value }}
+            </v-list-item>
+          </template>
+          <template #no-data v-if="!hideNoData">
+            <v-list-item @click="selectCreateNewCostumer">
+              Клієнта "<b>{{ form.model.value.name }}</b
+              >" в базі не знайдено. Нажміть ентер або <b>сюди</b> щоб тсворити.
+            </v-list-item>
+          </template>
+        </v-combobox>
+        <v-combobox
+          variant="underlined"
+          v-model.trim="form.model.value.phone"
+          :label="$t('text-field.phone.placeholder')"
+          :error-messages="form.errorMessages.value.phone"
+        />
+      </v-card-text>
+      <v-card-actions class="mx-auto">
+        <v-btn variant="text" type="submit" :disabled="disabledSubmitButton">
+          {{ $t("button-submit") }}
+        </v-btn>
+        <v-btn variant="text" @click="onCancel">
+          {{ $t("button-cancel") }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
   </v-form>
 </template>
 
@@ -39,7 +48,7 @@ import type { ICostumer } from "~/TS/ICostumer";
 import { useValidation } from "~/functions/useValidation";
 import { useMyUserStore } from "~/store/user";
 import { requestFiltersCreator } from "../../functions/requestFiltersCreate";
-const emit = defineEmits(["submitForm", "cancelCLick"]);
+const emit = defineEmits(["submitClick", "cancelClick"]);
 const app = useNuxtApp();
 
 const debounceTimeMs = 300;
@@ -47,8 +56,8 @@ const debounceTimeMs = 300;
 const initialForm = {
   name: "",
   phone: "",
-  costumerFromDb: false,
-  id: null,
+  costumer_from_db: false,
+  id: 0,
 };
 const costumersFromDb = ref<ICostumer[]>();
 const menuState = ref(false);
@@ -58,11 +67,12 @@ const userWantToCreateCostumer = ref(false);
 
 const costumersList = computed(() => {
   if (costumersFromDb.value?.length) {
-    return costumersFromDb.value.map((item: ICostumer) => {
+    return costumersFromDb.value.map((costumerFromDb: ICostumer) => {
       return {
-        title: item.name,
-        id: item.id,
-        phone: item.phone,
+        title: costumerFromDb.name,
+        id: costumerFromDb.id,
+        phone: costumerFromDb.phone,
+        costumer: costumerFromDb,
       };
     });
   } else {
@@ -99,11 +109,11 @@ const form = useValidation(initialForm, [
   },
 ]);
 
-const selectCostumerFromDb = (costumer: any) => {
-  form.model.value.costumerFromDb = true;
-  form.model.value.name = costumer.title;
-  form.model.value.phone = costumer.raw.phone;
-  form.model.value.id = costumer.raw.id;
+const selectCostumerFromDb = (costumerFromDb: ICostumer) => {
+  form.model.value.costumer_from_db = true;
+  form.model.value.name = costumerFromDb.name;
+  form.model.value.phone = costumerFromDb.phone;
+  form.model.value.id = costumerFromDb.id;
   nextTick(() => {
     disabledSubmitButton.value = false;
     menuState.value = false;
@@ -112,17 +122,17 @@ const selectCostumerFromDb = (costumer: any) => {
 
 const selectCreateNewCostumer = () => {
   menuState.value = false;
-  form.model.value.costumerFromDb = false;
+  form.model.value.costumer_from_db = false;
   userWantToCreateCostumer.value = true;
 };
 
-const onSubmitForm = () => {
-  emit("submitForm", form.model.value);
+const onSubmitClick = () => {
+  emit("submitClick", form.model.value);
   form.model.value = initialForm;
 };
 
 const onCancel = () => {
-  emit("cancelCLick");
+  emit("cancelClick");
 };
 
 watch(
@@ -131,15 +141,15 @@ watch(
     const userStore = useMyUserStore();
 
     try {
-      if (name?.length > 3 && !form.model.value.costumerFromDb) {
-        const { data: costumer }: any = await app.$apiFetch(
+      if (name?.length > 3 && !form.model.value.costumer_from_db) {
+        const { data: costumers }: any = await app.$apiFetch(
           `/costumers?filters[name][$containsi]=${name}&${requestFiltersCreator(
             userStore.userHotels.map((hotel) => hotel.id),
             "hotels"
           )}`
         );
 
-        costumersFromDb.value = costumer;
+        costumersFromDb.value = costumers;
       }
     } catch (e) {
       console.error("create form watcher err", e);

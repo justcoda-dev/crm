@@ -2,122 +2,47 @@
   <v-container class="py-4">
     <Calendar
       :reserved-dates="reservedDates"
+      :default-date="defaultDate"
       @select-dates="onSelectDates"
       @change-month="onChangeMonth"
       @on-reserved-day-click="onReservedDayClick"
     ></Calendar>
-
-    <v-bottom-sheet v-if="mobile" v-model="showCreateCostumerForm">
-      <v-card class="pa-2 h-100 justify-center">
-        <template #title>
-          {{ $t("title.create-user") }}
-        </template>
-        <create-costumer-form
-          @keyup.esc="onCancelCostumerCreateForm"
-          @cancelCLick="onCancelCostumerCreateForm"
-          @submitForm="onSubmitFormAndRefreshCalendarData"
-        />
-      </v-card>
-    </v-bottom-sheet>
-
-    <v-dialog v-else v-model="showCreateCostumerForm">
-      <v-card class="pa-4 mx-sm-auto" width="500px">
-        <template #title>
-          {{ $t("title.create-user") }}
-        </template>
-        <create-costumer-form
-          @keyup.esc="onCancelCostumerCreateForm"
-          @cancelCLick="onCancelCostumerCreateForm"
-          @submitForm="onSubmitFormAndRefreshCalendarData"
-        />
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="showEditForm">
-      <v-card class="pa-4">
-        <template #title>
-          {{ $t("title.edit-user") }}
-        </template>
-        <edit-costumer-form
-          :editCostumer="editCostumer"
-          @keyup.esc="onCancelCostumerEditForm"
-          @cancelCLick="onCancelCostumerEditForm"
-          @submitForm="onSubmitCostumerEditForm"
-        />
-      </v-card>
-    </v-dialog>
-
-    <v-bottom-sheet v-if="mobile" v-model="costumerInfoShow">
-      <costumer-info-card
-        v-if="dayInfo"
-        :costumer="dayInfo.costumer"
-        @on-delete="onCostumerInfoCardDelete"
-        class="pa-4"
-      >
-        <template #information>
-          <div class="text-center">
-            Заброньовано з: {{ dayInfo.start }} по
-            {{ dayInfo.end }}
-          </div>
-        </template>
-      </costumer-info-card>
-    </v-bottom-sheet>
-
-    <v-dialog v-else v-model="costumerInfoShow">
-      <costumer-info-card
-        v-if="dayInfo"
-        :costumer="dayInfo.costumer"
-        @on-delete="onCostumerInfoCardDelete"
-        class="pa-4"
-      >
-        <template #information>
-          <div style="text-align: center">
-            Заброньовано з: {{ dayInfo?.start }} по
-            {{ dayInfo?.end }}
-          </div>
-        </template>
-      </costumer-info-card>
-    </v-dialog>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-import type {
-  ICalendarDates,
-  ICalendarDate,
-  ICalendarDateData,
-} from "~/TS/ICalendarDate";
-import { useMyMobileStore } from "~/store/mobile";
-import { useMyUserStore } from "~/store/user";
-import CreateCostumerForm from "../../components/forms/CreateCostumerForm.vue";
-import EditCostumerForm from "../../components/forms/EditCostumerForm.vue";
 import Calendar from "../../components/calendar/Calendar.vue";
 
-import {
-  useCreateCostumerForm,
-  type ICreateingCalendarDate,
-} from "~/composable/useCreateCostumerForm";
+import type {
+  ICalendarDateCreate,
+  ICalendarCreateSelectedDates,
+} from "~/TS/ICalendarDate";
+import type { ICostumerCreate } from "~/TS/ICostumer";
+
 import { useRoute } from "vue-router";
-import type { ID } from "~/TS/myTypes";
-import { useEditCostumerForm } from "~/composable/useEditCostumerForm";
-import type { IDay } from "~/TS/IDay";
+import { useMyUserStore } from "~/store/user";
+import CreateCostumerForm from "~/components/forms/CreateCostumerForm.vue";
 import CostumerInfoCard from "~/components/cards/CostumerInfoCard.vue";
+import { useCreateCostumerForm } from "~/composable/useCreateCostumerForm";
+import { useCalendar } from "~/composable/useCalendar";
+import { useDialog } from "~/composable/useDialog";
+import { useStatus } from "~/composable/useStatus";
+import ConfirmForm from "~/components/forms/ConfirmForm.vue";
 
 const app = useNuxtApp();
 const route = useRoute();
 const router = useRouter();
+const dialog = useDialog();
+const status = useStatus();
+const { addSelectedDates } = useCalendar();
+const { createCostumer, addRelationsToCostumer } = useCreateCostumerForm();
 
-const { mobile } = storeToRefs(useMyMobileStore());
 const { user } = storeToRefs(useMyUserStore());
-
-const defaultDate = ref(new Date());
-const costumerInfoShow = ref(false);
-const dayInfo = ref<ICalendarDate>();
-
-const { data: reservedDatesData, refresh: refreshCalendarDatesFromDb } =
-  await app.$useApiFetch<ICalendarDates>(
-    () => `/calendar-dates?filters[hotel]=${route.params.id}&populate=*`
-  );
+const defaultDate = ref(
+  route.query.month
+    ? new Date(`${route.query.year}- ${route.query.month}`)
+    : new Date()
+);
 
 const reservedDates = computed(() => {
   if (reservedDatesData.value) {
@@ -127,108 +52,137 @@ const reservedDates = computed(() => {
   }
 });
 
-const hotelId = computed(() =>
-  !Array.isArray(route.params.id) ? parseInt(route.params.id) : undefined
+const selectedHotelId = computed(() =>
+  !Array.isArray(route.params.id)
+    ? parseInt(route.params.id)
+    : parseInt(route.params.id[0])
 );
 
-const onReservedDayClick = (day: IDay) => {
-  const [dateFromDb] = reservedDates.value
-    ? reservedDates.value.filter((date) => {
-        if (day.startDate && day.costumerEnter) {
-          return (
-            date.start === day.fullDate &&
-            date.costumer.id === day.costumerEnter.id
-          );
-        } else {
-          return (
-            date.end === day.fullDate &&
-            date.costumer.id === day.costumerLeave.id
-          );
-        }
-      })
-    : [];
-  if (dateFromDb) {
-    dayInfo.value = dateFromDb;
-    costumerInfoShow.value = true;
-  }
+const { data: reservedDatesData, refresh: refreshCalendarDatesFromDb } =
+  await app.$calendarDateService.getCalendarDatesByHotelIdServer(
+    selectedHotelId.value
+  );
+
+const onChangeMonth = (date: { year: number; month: number }) => {
+  router.push({ query: { ...date } });
 };
-const onCostumerInfoCardDelete = async () => {
-  try {
-    if (dayInfo.value) {
-      const { data } = await app.$apiFetch<ICalendarDateData>(
-        `/calendar-dates/${dayInfo.value.id}`,
-        {
-          method: "DELETE",
-        }
-      );
-      if (data.id) {
-        refreshCalendarDatesFromDb();
-        costumerInfoShow.value = false;
-      }
-    }
-  } catch (e) {
-    console.error(e);
-  }
-};
-// розібратись з тіпами які создають і в середині календаря підправити
-const onSelectDates = (date: any) => {
-  console.log(date);
-  onShowCreateCostumerForm({
-    ...date,
-    start: date.start.fullDate,
-    end: date.end.fullDate,
+
+const onReservedDayClick = (
+  day: ICalendarDateCreate & { [key: string]: any },
+  type: string
+) => {
+  const reservedDate = reservedDates.value?.filter(
+    (date) => date.start === day.full_date || date.end === day.full_date
+  )[0];
+  console.log(reservedDate);
+  const reservedDateId = reservedDate?.id;
+  dialog.showComponent({
+    componentToShow: CostumerInfoCard,
+    props: { costumer: day[type], costumerDate: reservedDate },
+    events: {
+      onDelete: () => {
+        dialog.showComponent({
+          componentToShow: ConfirmForm,
+          props: {
+            text: `Видалити бронювання з ${reservedDate?.start} по ${reservedDate?.end} ?`,
+          },
+          events: {
+            onSubmit: async () => {
+              try {
+                if (reservedDateId) {
+                  await app.$calendarDateService.deleteCalendarDateById(
+                    reservedDateId
+                  );
+                  status.showStatus({
+                    status: `Дату успішно видалено`,
+                    type: "success",
+                  });
+                }
+                refreshCalendarDatesFromDb();
+                dialog.hideComponent();
+              } catch (e) {
+                console.error(e);
+                status.showStatus({
+                  status: `При видаленні сталась помилка :(`,
+                  type: "error",
+                });
+                dialog.hideComponent();
+              }
+            },
+            onCancel: () => {
+              dialog.hideComponent();
+            },
+          },
+        });
+      },
+      onCancel: () => {
+        dialog.hideComponent();
+      },
+    },
   });
 };
-const {
-  showForm: showCreateCostumerForm,
-  onSubmitForm: onSubmitCreateForm,
-  onCancelForm: onCancelCostumerCreateForm,
-  onShowForm: onShowCreateCostumerForm,
-} = useCreateCostumerForm();
 
-const onSubmitFormAndRefreshCalendarData = async (formCostumer: {
-  name: string;
-  phone: string;
-  costumerFromDb: boolean;
-  user: ID;
-  costumerId: ID;
-  hotel: ID;
-  enterprise: ID;
-}) => {
-  await onSubmitCreateForm({
-    ...formCostumer,
-    hotel: hotelId.value,
-    // enterprise: user.value.enterprise.id,
-    user: user.value.id,
+const onSelectDates = async (
+  calendarSelectedDates: ICalendarCreateSelectedDates
+) => {
+  console.log(calendarSelectedDates);
+  dialog.showComponent({
+    componentToShow: CreateCostumerForm,
+    props: {},
+    events: {
+      submitClick: async (costumer: ICostumerCreate) => {
+        try {
+          if (user.value && selectedHotelId.value && calendarSelectedDates) {
+            const [createdDate, createdCostumer] = await Promise.all([
+              addSelectedDates({
+                ...calendarSelectedDates,
+                hotel: selectedHotelId.value,
+                user: user.value.id,
+              }),
+              createCostumer({
+                ...costumer,
+                user: user.value.id,
+                hotels: selectedHotelId.value,
+              }),
+            ]);
+            if (createdCostumer && createdDate) {
+              await addRelationsToCostumer({
+                id: createdCostumer.id,
+                user: user.value.id,
+                hotels: [...createdCostumer.hotels, selectedHotelId.value],
+                calendar_dates: [
+                  ...createdCostumer.calendar_dates,
+                  createdDate.id,
+                ],
+              });
+
+              refreshCalendarDatesFromDb();
+              dialog.dialogState.value = false;
+              status.showStatus({
+                status: `${createdCostumer.name} успішно заброньовано`,
+                type: "success",
+              });
+            }
+          }
+        } catch (e) {
+          status.showStatus({
+            status: `Під час бронювання виникла помилка :(`,
+            type: "error",
+          });
+          dialog.dialogState.value = false;
+        }
+      },
+      cancelClick: () => {
+        dialog.dialogState.value = false;
+      },
+    },
   });
-  await refreshCalendarDatesFromDb();
-};
-
-const {
-  editCostumer,
-  showForm: showEditForm,
-  onShowForm: onShowEditCostumerForm,
-  onSubmit: onSubmitEditForm,
-  onCancelEdit: onCancelCostumerEditForm,
-} = useEditCostumerForm();
-
-const onSubmitCostumerEditForm = async (formCostumer: {
-  name: string;
-  phone: string;
-  id: ID;
-}) => {
-  await onSubmitEditForm(formCostumer);
-  await refreshCalendarDatesFromDb();
-};
-
-const onChangeMonth = ({ month, year }: { month: number; year: number }) => {
-  router.push({ query: { year, month } });
 };
 
 watch(
-  () => route.query,
-  (qeury) => {
-    if (!qeury.month && route.path === "/calendar") {
+  () => route,
+  (route) => {
+    if (!route.query.month) {
       router.push({
         query: {
           year: defaultDate.value.getFullYear(),

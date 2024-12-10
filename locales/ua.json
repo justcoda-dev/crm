@@ -33,6 +33,7 @@
   "button-save": "Зберегти",
   "button-cancel": "Скасувати",
   "button-edit": "Редагувати",
+  "button-close": "Закрити",
   "button-create.new-costumer": "Створити клієнта",
   "button-create.costumer": "Вибрати клієнта зі списку",
   "error.password": "Пароль повинен бути більше ніж 5 символів",

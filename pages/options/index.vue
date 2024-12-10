@@ -1,52 +1,15 @@
 <template>
   <v-container class="py-4">
-    <v-row>
-      <v-col>
-        <template v-for="optionItem of optionsData" :key="optionItem.id">
-          <options-card
-            class="options-card__price ma-2"
-            :item="optionItem"
-            @onSave="onSaveClick(optionItem)"
-          />
-        </template>
-      </v-col>
-    </v-row>
+    {{ options }}
+    <component :is="components[currComponent]"></component>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-import OptionsCard from "~/components/cards/OptionsCard.vue";
-import type { IOption, IOptionsData } from "~/TS/IOption";
 const app = useNuxtApp();
-
-const { data: options, refresh: refreshOptions } =
-  await app.$useApiFetch<IOptionsData>("/options?populate=*");
-
-const optionsData = computed(() => {
-  if (options.value) {
-    return options.value.data
-      .map((option) => ({ ...option, id: option.id }))
-      .sort((a, b) => a.id - b.id);
-  } else {
-    return [];
-  }
-});
-
-const onSaveClick = (optionItem: IOption) => {
-  try {
-    app.$apiFetch(`options/${optionItem.id}`, {
-      method: "PUT",
-      body: {
-        data: {
-          ...optionItem,
-        },
-      },
-    });
-    refreshOptions();
-  } catch (e) {
-    console.error(e);
-  }
-};
+const { data: options } = await app.$apiFetch("/options?populate=*");
+const components = shallowRef({});
+const currComponent = ref();
 </script>
 
 <style lang="scss" scoped></style>

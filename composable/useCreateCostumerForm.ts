@@ -1,103 +1,62 @@
-import type { ICostumer, ICostumerData, ICostumersData } from "~/TS/ICostumer";
-import type { ICalendarDates } from "~/TS/ICalendarDate";
-import type { ID } from "~/TS/myTypes";
-import type { IHotel } from "~/TS/IHotel";
-export interface ICreateingCalendarDate {
-  start: string;
-  end: string;
-  filter_date: string;
-  total_price: number;
-  daysCount: number;
-  hotel?: ID;
-  enterprice?: ID;
-}
+import type { ICostumerCreate, ICostumerUpdate } from "~/TS/ICostumer";
 export const useCreateCostumerForm = () => {
   const app = useNuxtApp();
-  const showForm = ref(false);
-  const selectedDates = ref();
+  const formState = ref(false);
+  const loading = ref(false);
 
-  const onCancelForm = () => {
-    showForm.value = false;
+  const hideForm = () => {
+    formState.value = false;
   };
-  // перерробити на простий пат зарос, і передавати юзера з форми данні
-  const onSubmitForm = async (formDataCostumer: {
-    name: string;
-    phone: string;
-    costumerFromDb: boolean;
-    user: ID;
-    costumerId: ID;
-    hotel: ID;
-    id: ID;
-    enterprise: ID;
-  }) => {
-    console.log(formDataCostumer);
-    showForm.value = false;
+  const showForm = () => {
+    formState.value = true;
+  };
+
+  const createCostumer = async (costumerData: ICostumerCreate) => {
+    loading.value = true;
+    const { id, ...formDataNewCostumer } = costumerData;
     try {
-      console.log(selectedDates.value, formDataCostumer);
-      const { data: calendarDates } = await app.$apiFetch<ICalendarDates>(
-        "/calendar-dates",
-        {
-          method: "POST",
-          body: {
-            data: {
-              ...selectedDates.value,
-              user: formDataCostumer.user,
-              hotel: formDataCostumer.hotel,
-            },
-          },
-        }
-      );
-
-      if (formDataCostumer.costumerFromDb) {
-        const { data: costumerFromDb } = await app.$apiFetch<ICostumerData>(
-          `costumers/${formDataCostumer.id}?populate=*`
-        );
-
-        await app.$apiFetch<ICostumersData>(
-          `/costumers/${formDataCostumer.id}`,
-          {
-            method: "PUT",
-            body: {
-              data: {
-                name: formDataCostumer.name,
-                phone: formDataCostumer.phone,
-                hotels: costumerFromDb.hotels.every(
-                  (hotel: { id: ID }) => hotel.id !== formDataCostumer.hotel
-                )
-                  ? [...costumerFromDb.hotels, formDataCostumer.hotel]
-                  : [...costumerFromDb.hotels],
-                user: formDataCostumer.user,
-                calendar_dates: [
-                  ...costumerFromDb.calendar_dates,
-                  calendarDates.id,
-                ],
-              },
-            },
-          }
-        );
+      if (costumerData.costumer_from_db) {
+        const constumerFromDb = await app.$costumerService.getCostumerById(id);
+        loading.value = false;
+        return constumerFromDb;
       } else {
-        await app.$apiFetch<ICostumersData>("/costumers", {
-          method: "POST",
-          body: {
-            data: {
-              ...formDataCostumer,
-              hotels: formDataCostumer.hotel,
-              user: formDataCostumer.user,
-              calendar_dates: calendarDates.id,
-            },
-          },
-        });
+        const costumerFromDb = await app.$costumerService.postCostumer(
+          formDataNewCostumer
+        );
+        loading.value = false;
+        return costumerFromDb;
       }
-    } catch (e) {
-      console.error("user create form error", e);
+    } catch (error) {
+      console.error("user create form error", error);
+      loading.value = false;
+      throw error;
+    }
+  };
+  const addRelationsToCostumer = async (
+    updateCostumerData: ICostumerUpdate
+  ) => {
+    try {
+      if (updateCostumerData.id) {
+        loading.value = true;
+        const data = await app.$costumerService.updateCostumerById(
+          updateCostumerData
+        );
+        loading.value = false;
+        return data;
+      }
+    } catch (error) {
+      console.error("add relations costumer error", error);
+      loading.value = false;
+      throw error;
     }
   };
 
-  const onShowForm = (date: ICreateingCalendarDate) => {
-    console.log(date);
-    selectedDates.value = toValue(date);
-    showForm.value = true;
+  return {
+    showForm,
+    hideForm,
+    createCostumer,
+    addRelationsToCostumer,
+    loading,
+    formState,
   };
-
-  return { selectedDates, showForm, onCancelForm, onSubmitForm, onShowForm };
 };

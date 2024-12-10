@@ -1,31 +1,41 @@
 import type { ID } from "~/TS/myTypes";
+
 export const useEditCostumerForm = () => {
   const app = useNuxtApp();
-  const editCostumer = ref({});
-  const showForm = ref(false);
+  const formState = ref(false);
+  const costumer = ref();
+  const loading = ref(false);
 
-  const onShowForm = (costumer: { id: ID; name: string; phone: string }) => {
-    editCostumer.value = toValue(costumer);
-    showForm.value = true;
+  const hideForm = () => {
+    formState.value = false;
   };
-
-  const onSubmit = async (formCostumer: {
+  const showForm = () => {
+    formState.value = true;
+  };
+  const updateCostumer = async (formDataCostumer: {
     name: string;
     phone: string;
+    costumer_from_db: boolean;
+    user: ID;
+    hotels: ID;
     id: ID;
   }) => {
-    const formEditedCostumer = toValue(formCostumer);
-    await app.$apiFetch(`costumers/${formEditedCostumer.id}`, {
-      method: "PUT",
-      body: {
-        data: formEditedCostumer,
-      },
-    });
-    showForm.value = false;
+    try {
+      if (formDataCostumer.costumer_from_db) {
+        loading.value = true;
+        const costumerFromDb = await app.$costumerService.updateCostumerById(
+          formDataCostumer
+        );
+        costumer.value = costumerFromDb;
+        loading.value = false;
+        return costumerFromDb;
+      }
+    } catch (e) {
+      console.error("user create form error", e);
+      loading.value = false;
+    }
+    hideForm();
   };
 
-  const onCancelEdit = () => {
-    showForm.value = false;
-  };
-  return { showForm, editCostumer, onShowForm, onSubmit, onCancelEdit };
+  return { showForm, hideForm, updateCostumer, loading };
 };

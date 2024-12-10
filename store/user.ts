@@ -7,24 +7,27 @@ import type { IEnterpirce } from "~/TS/IEnterprice";
 export const useMyUserStore = defineStore("myUserStore", () => {
   const store = useMyAuthStore();
   const app = useNuxtApp();
-  const user = ref();
+  const user = ref<IUser | null>();
   const loading = ref(false);
-  const userHotels = computed<IHotel[]>(() => user.value.hotels);
-  const userEnterprice = computed<IEnterpirce>(() => user.value.enterprice);
+  const userHotels = computed<IHotel[] | undefined>(() => user.value?.hotels);
+  const userEnterprice = computed<IEnterpirce | undefined>(
+    () => user.value?.enterprice
+  );
 
   const getUser = async () => {
     try {
       loading.value = true;
-      const { data } = await app.$useApiFetch<IUser>("users/me?populate=*");
-      user.value = data.value;
-    } catch (e: any) {
+      const userData = await app.$userService.getUser();
+      user.value = userData;
       loading.value = false;
-      console.error("get user data error", e);
-      if (e.status === 401) {
+    } catch (error: any) {
+      loading.value = false;
+      console.error("get user data error", error);
+      if (error.status === 401) {
         store.logout();
       }
     }
   };
 
-  return { user, getUser, userHotels, userEnterprice };
+  return { user, getUser, userHotels, userEnterprice, loading };
 });

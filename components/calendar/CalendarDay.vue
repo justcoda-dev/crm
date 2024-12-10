@@ -10,16 +10,16 @@
   >
     <span class="calendar-day__day">{{ day.day }}</span>
     <div
-      v-if="props.day.endDate"
-      @click.stop="onReservedLeaveClick"
-      :class="{ end: props.day.endDate }"
+      v-if="props.day.end_date"
+      @click.stop="onReservedDayClick('costumer_leave')"
+      :class="{ end: props.day.end_date }"
     >
       <span>Виїзд</span>
     </div>
     <div
-      v-if="props.day.startDate"
-      @click.stop="onReservedEnterClick"
-      :class="{ start: props.day.startDate }"
+      v-if="props.day.start_date"
+      @click.stop="onReservedDayClick('costumer_enter')"
+      :class="{ start: props.day.start_date }"
     >
       <span>Заїзд</span>
     </div>
@@ -29,10 +29,10 @@
 </template>
 
 <script lang="ts" setup>
-import type { IDay } from "~/TS/IDay";
+import type { ICalendarDateCreate } from "~/TS/ICalendarDate";
 
 interface IProps {
-  day: IDay;
+  day: ICalendarDateCreate;
 }
 
 const props = defineProps<IProps>();
@@ -43,11 +43,8 @@ const onDayClick = () => {
     emit("onClick", { ...props.day });
   }
 };
-const onReservedEnterClick = () => {
-  emit("onReservedClick", { ...props.day, enter: true });
-};
-const onReservedLeaveClick = () => {
-  emit("onReservedClick", { ...props.day, enter: false });
+const onReservedDayClick = (type: string) => {
+  emit("onReservedClick", { ...props.day }, type);
 };
 </script>
 

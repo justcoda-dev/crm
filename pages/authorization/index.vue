@@ -32,7 +32,7 @@ const isComponent = computed<Record<string, any>>(() => {
     ),
   };
 });
-const sharedProps = computed<Record<string, any>>(() => {
+const sharedProps = computed<{ [key: string]: any }>(() => {
   return {
     LoginForm: {
       loading: loading.value,

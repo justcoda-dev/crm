@@ -8,9 +8,9 @@
     return-object
   >
     <template #item.name="{ item }">
-      <NuxtLink @click="onClick(item.id)">
+      <v-list-item @click="onClick(item.id)">
         {{ item.name }}
-      </NuxtLink>
+      </v-list-item>
     </template>
   </v-data-table>
 </template>
@@ -30,7 +30,7 @@ const route = useRoute();
 const router = useRouter();
 
 const onClick = (id: ID) => {
-  router.push({ path: `${route.path}/costumer`, query: { id } });
+  router.push({ name: "costumers-list-costumer-id", params: { id } });
 };
 const items = computed(() => {
   if (props.costumersList.length) {

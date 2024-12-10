@@ -1,4 +1,4 @@
-import type { ICalendarDate } from "./ICalendarDate";
+import type { ICalendarDateFromDb } from "./ICalendarDate";
 import type { IEnterpirce } from "./IEnterprice";
 import type { ICostumer } from "./ICostumer";
 import type { IUser } from "./IUser";
@@ -13,7 +13,7 @@ export interface IHotel {
   user: IUser[];
   costumers: ICostumer[];
   enterprice: IEnterpirce;
-  calendar_dates: ICalendarDate[];
+  calendar_dates: ICalendarDateFromDb[];
 }
 export interface IHotelsData {
   data: IHotel[];

@@ -1,9 +1,8 @@
 <template>
   <v-app-bar>
     <v-app-bar-nav-icon variant="text" @click.stop="onMenuToggle" />
-
     <v-toolbar-title>
-      <NuxtLink to="/">{{ $t("mainTitle") }}</NuxtLink>
+      <nuxt-link to="/">{{ $t("mainTitle") }}</nuxt-link>
     </v-toolbar-title>
     <v-spacer />
     <v-btn icon="mdi-export" @click="logoutApp" />
@@ -19,16 +18,18 @@
           :title="$t(menuItem.title)"
         />
       </template>
-      <v-list-group value="Hotels" prepend-icon="mdi-view-dashboard">
+      <v-list-group value="Hotels" prepend-icon="mdi-home-silo">
         <template v-slot:activator="{ props }">
           <v-list-item
             v-bind="props"
             :title="$t('menuItem.hotels')"
           ></v-list-item>
         </template>
-        <v-list-item>+ create hotel</v-list-item>
+        <v-list-item prepend-icon="mdi-plus" @click="onCreateHotel"
+          >create hotel</v-list-item
+        >
         <template v-for="hotel of hotels" :key="hotel.id">
-          <v-list-item @click="onHotelCkick(hotel.id)">
+          <v-list-item prepend-icon="mdi-bed" @click="onHotelCkick(hotel.id)">
             {{ hotel.name }}
           </v-list-item>
         </template>
@@ -38,10 +39,13 @@
 </template>
 
 <script lang="ts" setup>
+import { useDialog } from "~/composable/useDialog";
+import { useStatus } from "~/composable/useStatus";
 import { useMyAuthStore } from "~/store/auth";
 import type { IHotelsData } from "~/TS/IHotel";
 import type { IUser } from "~/TS/IUser";
 import type { ID } from "~/TS/myTypes";
+import CreateHotelForm from "../forms/CreateHotelForm.vue";
 
 interface MenuItem {
   id: ID;
@@ -60,6 +64,8 @@ const props = defineProps<IProps>();
 const authStore = useMyAuthStore();
 const router = useRouter();
 const route = useRoute();
+const dialog = useDialog();
+const status = useStatus();
 const menuToggle = ref(false);
 
 const { data: hotels } = await app.$apiFetch<IHotelsData>(
@@ -77,7 +83,14 @@ const onMenuItemClick = (path: string) => {
 const onHotelCkick = (id: ID) => {
   router.push({ name: "hotel-id", params: { id } });
 };
-
+const onCreateHotel = () => {
+  menuToggle.value = false;
+  dialog.showComponent({
+    componentToShow: CreateHotelForm,
+    props: {},
+    events: {},
+  });
+};
 const logoutApp = () => {
   authStore.logout();
   navigateTo("/authorization");

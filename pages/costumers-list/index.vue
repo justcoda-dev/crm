@@ -9,10 +9,11 @@
         />
       </v-col>
       <v-col>
-        <v-btn @click="onOpenCreateForm">{{ $t("button-add") }}</v-btn>
-        <v-spacer></v-spacer>
         <v-btn :disabled="!selected.length" @click="onDeleteCostumer">{{
           $t("button-delete")
+        }}</v-btn>
+        <v-btn @click="onCreateCostumerForm">{{
+          $t("button-create.new-costumer")
         }}</v-btn>
       </v-col>
     </v-row>
@@ -21,135 +22,140 @@
       :search="search"
       :costumersList="costumersList"
     />
-    <v-dialog v-model="showCreateCostumerForm">
-      <v-card class="pa-4">
-        <template #title>
-          {{ $t("title.create-user") }}
-        </template>
-        <create-costumer-form
-          @keyup.esc="onCancelCostumerCreateForm"
-          @cancelCLick="onCancelCostumerCreateForm"
-          @submitForm="onSubmitCreateForm"
-        />
-      </v-card>
-    </v-dialog>
-    <v-dialog v-model="showAlert">
-      <v-alert type="error" :text="alertMessage">
-        <nuxt-link
-          class="mr-1 text-white"
-          v-for="({ link, date }, index) of selectedCostumerDatesAndLinks"
-          :to="link"
-          :key="index"
-        >
-          {{ date.toLocaleDateString() }}
-        </nuxt-link>
-      </v-alert>
-    </v-dialog>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-import CreateCostumerForm from "../../components/forms/CreateCostumerForm.vue";
+import CreateCostumerForm from "~/components/forms/CreateCostumerForm.vue";
+import { useDialog } from "~/composable/useDialog";
 import CostumersTable from "../../components/tables/CostumersTable.vue";
 import { useMyMobileStore } from "~/store/mobile";
 import { useMyUserStore } from "~/store/user";
-import { requestFiltersCreator } from "~/functions/requestFiltersCreate";
-import type { ICostumer, ICostumerData, ICostumersData } from "~/TS/ICostumer";
-import type { ICalendarDate } from "~/TS/ICalendarDate";
+
+import type {
+  ICalendarDateDataFromDb,
+  ICalendarDateFromDb,
+  ICalendarDates,
+} from "~/TS/ICalendarDate";
+import { useStatus } from "~/composable/useStatus";
+import { useCreateCostumerForm } from "~/composable/useCreateCostumerForm";
+import type { ICostumerCreate } from "~/TS/ICostumer";
+import ConfirmForm from "~/components/forms/ConfirmForm.vue";
 
 const app = useNuxtApp();
 const mobileStore = useMyMobileStore();
 const userStore = useMyUserStore();
-const { mobile } = storeToRefs(mobileStore);
-const { userHotels } = storeToRefs(userStore);
-const hotelsId = userHotels.value.map((hotel) => hotel.id);
 
-const { data: costumers, refresh: refreshCostumers } =
-  await app.$useApiFetch<ICostumersData>(
-    `/costumers?${requestFiltersCreator(hotelsId, "hotels")}`
-  );
+const dialog = useDialog();
+const status = useStatus();
+const createForm = useCreateCostumerForm();
+const { mobile } = storeToRefs(mobileStore);
+const { userHotels, user } = storeToRefs(userStore);
+
+const hotelIds = computed(() =>
+  userHotels.value ? userHotels.value?.map((hotel) => hotel.id) : []
+);
+const { data: costumers, refresh: refreshCostumers } = useAsyncData(
+  async () => await app.$costumerService.getCostumersByHotels(hotelIds.value)
+);
 
 const search = ref("");
-const selected = ref([]);
-const selectedCostumerDates = ref<Date[]>();
-const showCreateCostumerForm = ref(false);
-const alertMessage = ref("");
-const showAlert = ref(false);
+const selected = ref<{ name: string; phone: "string"; id: number }[]>([]);
+const reservedCostumerDates = ref<ICalendarDateFromDb[]>();
 
 const costumersList = computed(() => {
   if (costumers.value) {
-    return costumers.value.data;
+    return costumers.value;
   } else {
     return [];
   }
 });
-const selectedCostumerDatesAndLinks = computed(() =>
-  selectedCostumerDates.value.map((date: Date) => {
-    return {
-      link: `/calendar?month=${date.getFullYear()}-${
-        date.getMonth() + 1 < 10
-          ? "0" + (date.getMonth() + 1)
-          : date.getMonth() + 1
-      }`,
-      date,
-    };
-  })
-);
-const onOpenCreateForm = () => {
-  showCreateCostumerForm.value = true;
-};
-
-const onCancelCostumerCreateForm = () => {
-  showCreateCostumerForm.value = false;
+const onCreateCostumerForm = () => {
+  dialog.showComponent({
+    componentToShow: CreateCostumerForm,
+    props: {},
+    events: {
+      submitClick: async (costumer: ICostumerCreate) => {
+        try {
+          if (user) {
+            const createdCostumer = await createForm.createCostumer(costumer);
+            const createdCostumerWithRelation =
+              await createForm.addRelationsToCostumer({
+                ...createdCostumer,
+                hotels: userHotels.value,
+                user: user.value,
+              });
+            console.log(createdCostumerWithRelation);
+            status.showStatus({
+              status: "Клієнта створено успішно",
+              type: "success",
+            });
+            refreshCostumers();
+          }
+          dialog.hideComponent();
+        } catch (error) {
+          status.showStatus({
+            status: "При створені клієнта слалась помилка :(",
+            type: "error",
+          });
+        }
+      },
+      cancelClick: () => {
+        dialog.hideComponent();
+      },
+    },
+  });
 };
 const onDeleteCostumer = async () => {
   if (selected.value.length) {
-    selected.value.forEach(async (selectedCostumer: ICostumer) => {
-      const { data: costumer } = await app.$apiFetch<ICostumerData>(
-        `/costumers/${selectedCostumer.id}?populate=*`
-      );
-      console.log(costumer);
-      if (costumer.calendar_dates.length) {
-        selectedCostumerDates.value = costumer.calendar_dates.map(
-          (date: ICalendarDate) => {
-            const createdDate = new Date(date.start);
-            return createdDate;
+    dialog.showComponent({
+      componentToShow: ConfirmForm,
+      props: {
+        text:
+          selected.value.length > 1
+            ? `Будуть також видалені повязані дати. Видалити ${selected.value.length} користувачів ?`
+            : `Будуть також видалені повязані дати. Видалити користувача ${selected.value[0]?.name}?`,
+      },
+      events: {
+        onSubmit: async () => {
+          try {
+            const costumerIds = selected.value.map((costumer) => costumer.id);
+            const { data: datesToDelete } =
+              await app.$calendarDateService.getCalendarDatesFilteredByIds<ICalendarDates>(
+                costumerIds,
+                "costumer"
+              );
+            await Promise.all(
+              datesToDelete.map(
+                async (date) =>
+                  await app.$calendarDateService.deleteCalendarDateById(date.id)
+              )
+            );
+            await Promise.all(
+              selected.value.map(
+                async (costumer) =>
+                  await app.$costumerService.deleteCostumer(costumer.id)
+              )
+            );
+            dialog.hideComponent();
+            refreshCostumers();
+            status.showStatus({
+              status: "Видалено успішно",
+              type: "success",
+            });
+          } catch (error) {
+            dialog.hideComponent();
+            status.showStatus({
+              status: "При видаленні сталсь помилка",
+              type: "error",
+            });
           }
-        );
-
-        alertMessage.value = `Неможливо видалити користувача, так як є заброньовані дати поваязані з ним: `;
-        showAlert.value = true;
-        return;
-      } else {
-        try {
-          const deletedCostumer = await app.$apiFetch(
-            `/costumers/${selectedCostumer.id}`,
-            {
-              method: "DELETE",
-            }
-          );
-          refreshCostumers();
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    });
-  }
-};
-const onSubmitCreateForm = async (formData: object) => {
-  showCreateCostumerForm.value = false;
-  try {
-    const createCostumer = await app.$apiFetch(`/costumers`, {
-      method: "POST",
-      body: {
-        data: {
-          ...formData,
+        },
+        onCancel: () => {
+          dialog.hideComponent();
         },
       },
     });
-    refreshCostumers();
-  } catch (e) {
-    console.error(e);
   }
 };
 </script>

@@ -12,20 +12,20 @@
 </template>
 
 <script lang="ts" setup>
-import type { IDay } from "~/TS/IDay";
+import type { ICalendarDateCreate } from "~/TS/ICalendarDate";
 
 interface IProps {
-  days: IDay[];
+  days: ICalendarDateCreate[];
 }
 
 const props = defineProps<IProps>();
 const emit = defineEmits(["onDayClick", "onReservedDayClick"]);
 
-const onDayClick = (day: IDay) => {
+const onDayClick = (day: ICalendarDateCreate) => {
   emit("onDayClick", day);
 };
-const onReservedDayClick = (day: IDay) => {
-  emit("onReservedDayClick", day);
+const onReservedDayClick = (day: ICalendarDateCreate, type: string) => {
+  emit("onReservedDayClick", day, type);
 };
 </script>
 
