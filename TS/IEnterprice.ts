@@ -1,11 +1,11 @@
 import type { ID } from "./myTypes";
 
-export interface IEnterpirce {
+export interface IEnterpirse {
   id: ID;
 }
-export interface IEnterpirceData {
-  data: IEnterpirce;
+export interface IEnterpirseData {
+  data: IEnterpirse;
 }
-export interface IEnterpircesData {
-  data: IEnterpirce[];
+export interface IEnterpirsesData {
+  data: IEnterpirse[];
 }

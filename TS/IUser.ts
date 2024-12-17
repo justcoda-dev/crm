@@ -1,5 +1,5 @@
 import type { ICostumer } from "./ICostumer";
-import type { IEnterpirce } from "./IEnterprice";
+import type { IEnterpirse } from "./IEnterprice";
 import type { IHotel } from "./IHotel";
 import type { ID } from "./myTypes";
 
@@ -14,7 +14,7 @@ export interface IUser {
   role?: string;
   costumers: ICostumer[];
   hotels?: IHotel[];
-  enterprice: IEnterpirce;
+  enterprise: IEnterpirse;
 }
 
 export interface IUserData {

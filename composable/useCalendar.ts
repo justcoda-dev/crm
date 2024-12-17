@@ -14,7 +14,7 @@ export const useCalendar = () => {
   ) => {
     try {
       loading.value = true;
-      const data = await app.$calendarDateService.postSelectedCalendarDates(
+      const data = await app.$calendarDateService.postData(
         selectedCalendarDates
       );
       loading.value = false;

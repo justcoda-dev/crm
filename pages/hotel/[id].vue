@@ -3,6 +3,10 @@
     <Calendar
       :reserved-dates="reservedDates"
       :default-date="defaultDate"
+      :price="{
+        weekday_price: weekDaysPrice,
+        weekend_price: weekEndsPrice,
+      }"
       @select-dates="onSelectDates"
       @change-month="onChangeMonth"
       @on-reserved-day-click="onReservedDayClick"
@@ -21,13 +25,10 @@ import type { ICostumerCreate } from "~/TS/ICostumer";
 
 import { useRoute } from "vue-router";
 import { useMyUserStore } from "~/store/user";
-import CreateCostumerForm from "~/components/forms/CreateCostumerForm.vue";
-import CostumerInfoCard from "~/components/cards/CostumerInfoCard.vue";
-import { useCreateCostumerForm } from "~/composable/useCreateCostumerForm";
 import { useCalendar } from "~/composable/useCalendar";
 import { useDialog } from "~/composable/useDialog";
 import { useStatus } from "~/composable/useStatus";
-import ConfirmForm from "~/components/forms/ConfirmForm.vue";
+import { useForm } from "~/composable/useForm";
 
 const app = useNuxtApp();
 const route = useRoute();
@@ -35,13 +36,20 @@ const router = useRouter();
 const dialog = useDialog();
 const status = useStatus();
 const { addSelectedDates } = useCalendar();
-const { createCostumer, addRelationsToCostumer } = useCreateCostumerForm();
+const { submitForm, update } = useForm(app.$costumerService);
 
 const { user } = storeToRefs(useMyUserStore());
 const defaultDate = ref(
   route.query.month
     ? new Date(`${route.query.year}- ${route.query.month}`)
     : new Date()
+);
+const price = await app.$settingService.getSettingByKey("price");
+const weekDaysPrice = computed(() =>
+  parseInt(price.find((item) => item.key === "weekday").value)
+);
+const weekEndsPrice = computed(() =>
+  parseInt(price.find((item) => item.key === "weekend").value)
 );
 
 const reservedDates = computed(() => {
@@ -59,8 +67,9 @@ const selectedHotelId = computed(() =>
 );
 
 const { data: reservedDatesData, refresh: refreshCalendarDatesFromDb } =
-  await app.$calendarDateService.getCalendarDatesByHotelIdServer(
-    selectedHotelId.value
+  await app.$calendarDateService.getDataByFilter(
+    selectedHotelId.value,
+    "hotel"
   );
 
 const onChangeMonth = (date: { year: number; month: number }) => {
@@ -72,17 +81,21 @@ const onReservedDayClick = (
   type: string
 ) => {
   const reservedDate = reservedDates.value?.filter(
-    (date) => date.start === day.full_date || date.end === day.full_date
+    (date: any) => date.start === day.full_date || date.end === day.full_date
   )[0];
-  console.log(reservedDate);
+
   const reservedDateId = reservedDate?.id;
   dialog.showComponent({
-    componentToShow: CostumerInfoCard,
+    componentToShow: defineAsyncComponent(
+      () => import("@/components/cards/CostumerInfoCard.vue")
+    ),
     props: { costumer: day[type], costumerDate: reservedDate },
     events: {
       onDelete: () => {
         dialog.showComponent({
-          componentToShow: ConfirmForm,
+          componentToShow: defineAsyncComponent(
+            () => import("@/components/forms/ConfirmForm.vue")
+          ),
           props: {
             text: `Видалити бронювання з ${reservedDate?.start} по ${reservedDate?.end} ?`,
           },
@@ -90,9 +103,7 @@ const onReservedDayClick = (
             onSubmit: async () => {
               try {
                 if (reservedDateId) {
-                  await app.$calendarDateService.deleteCalendarDateById(
-                    reservedDateId
-                  );
+                  await app.$calendarDateService.deleteById(reservedDateId);
                   status.showStatus({
                     status: `Дату успішно видалено`,
                     type: "success",
@@ -125,9 +136,10 @@ const onReservedDayClick = (
 const onSelectDates = async (
   calendarSelectedDates: ICalendarCreateSelectedDates
 ) => {
-  console.log(calendarSelectedDates);
   dialog.showComponent({
-    componentToShow: CreateCostumerForm,
+    componentToShow: defineAsyncComponent(
+      () => import("@/components/forms/CreateCostumerForm.vue")
+    ),
     props: {},
     events: {
       submitClick: async (costumer: ICostumerCreate) => {
@@ -139,22 +151,24 @@ const onSelectDates = async (
                 hotel: selectedHotelId.value,
                 user: user.value.id,
               }),
-              createCostumer({
+              submitForm({
                 ...costumer,
                 user: user.value.id,
                 hotels: selectedHotelId.value,
               }),
             ]);
             if (createdCostumer && createdDate) {
-              await addRelationsToCostumer({
-                id: createdCostumer.id,
-                user: user.value.id,
-                hotels: [...createdCostumer.hotels, selectedHotelId.value],
-                calendar_dates: [
-                  ...createdCostumer.calendar_dates,
-                  createdDate.id,
-                ],
-              });
+              await update(
+                {
+                  user: user.value.id,
+                  hotels: [...createdCostumer.hotels, selectedHotelId.value],
+                  calendar_dates: [
+                    ...createdCostumer.calendar_dates,
+                    createdDate.id,
+                  ],
+                },
+                createdCostumer.id
+              );
 
               refreshCalendarDatesFromDb();
               dialog.dialogState.value = false;

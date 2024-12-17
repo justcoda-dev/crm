@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar>
+  <v-app-bar v-if="userStore.user">
     <v-app-bar-nav-icon variant="text" @click.stop="onMenuToggle" />
     <v-toolbar-title>
       <nuxt-link to="/">{{ $t("mainTitle") }}</nuxt-link>
@@ -42,10 +42,12 @@
 import { useDialog } from "~/composable/useDialog";
 import { useStatus } from "~/composable/useStatus";
 import { useMyAuthStore } from "~/store/auth";
-import type { IHotelsData } from "~/TS/IHotel";
+import type { IHotel, IHotelCreate, IHotelsData } from "~/TS/IHotel";
 import type { IUser } from "~/TS/IUser";
 import type { ID } from "~/TS/myTypes";
 import CreateHotelForm from "../forms/CreateHotelForm.vue";
+import { useMyUserStore } from "~/store/user";
+import { useForm } from "~/composable/useForm";
 
 interface MenuItem {
   id: ID;
@@ -56,22 +58,25 @@ interface MenuItem {
 
 interface IProps {
   headerMenuList: MenuItem[];
-  user: IUser;
 }
 
 const app = useNuxtApp();
 const props = defineProps<IProps>();
 const authStore = useMyAuthStore();
+const userStore = useMyUserStore();
+console.log(userStore);
 const router = useRouter();
 const route = useRoute();
 const dialog = useDialog();
 const status = useStatus();
+const { submitForm } = useForm(app.$hotelService);
 const menuToggle = ref(false);
 
-const { data: hotels } = await app.$apiFetch<IHotelsData>(
-  `/hotels?filters[users]=${props.user.id}&populate=*`
+const { data: hotels, refresh: refreshHotels } = await useAsyncData(() =>
+  app.$hotelService.getDataByFilter(userStore.user.id, "users")
 );
-const username = computed(() => props.user.username);
+
+const username = computed(() => userStore.user?.username);
 
 const onMenuItemClick = (path: string) => {
   if (route.path === path) {
@@ -86,9 +91,40 @@ const onHotelCkick = (id: ID) => {
 const onCreateHotel = () => {
   menuToggle.value = false;
   dialog.showComponent({
-    componentToShow: CreateHotelForm,
+    componentToShow: defineAsyncComponent(
+      () => import("@/components/forms/CreateHotelForm.vue")
+    ),
     props: {},
-    events: {},
+    events: {
+      onSubmit: async (formData: { name: string; location: string }) => {
+        try {
+          const enterprise = userStore.userEnterprise;
+          const users = await app.$userService.getDataByFilter(
+            enterprise.id,
+            "enterprise"
+          );
+          console.log(users);
+
+          const hotel = await submitForm({ ...formData, enterprise, users });
+          dialog.hideComponent();
+          status.showStatus({
+            status: `Готель ${hotel.name} успішно створено`,
+            type: "success",
+          });
+          refreshHotels();
+        } catch (error) {
+          console.error(error);
+          status.showStatus({
+            status: "При створенні готелю виникла помилка :(",
+            type: "error",
+          });
+          dialog.hideComponent();
+        }
+      },
+      onCancel: () => {
+        dialog.hideComponent();
+      },
+    },
   });
 };
 const logoutApp = () => {

@@ -1,7 +1,7 @@
 <template>
   <v-theme-provider>
     <v-app>
-      <Header v-if="user" :user="user" :headerMenuList="headerMenuList" />
+      <Header :headerMenuList="headerMenuList" />
       <v-main class="bg-grey-lighten-5">
         <slot />
 
@@ -30,7 +30,6 @@ import { useMyUserStore } from "~/store/user";
 const userStore = useMyUserStore();
 const dialog = useDialog();
 const status = useStatus();
-const { user } = storeToRefs(userStore);
 
 await userStore.getUser();
 
@@ -44,8 +43,8 @@ const headerMenuList = ref([
   },
   {
     id: 2,
-    path: "/options",
-    title: "menuItem.options",
+    path: "/settings",
+    title: "menuItem.settings",
     iconName: "mdi-cog",
     type: "list-item",
   },

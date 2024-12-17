@@ -27,9 +27,13 @@ import type {
 interface IProps {
   reservedDates?: ICalendarDateFromDb[];
   defaultDate?: any;
+  price?: {
+    weekend_price: number;
+    weekday_price: number;
+  };
 }
 const props = defineProps<IProps>();
-console.log(props.defaultDate);
+
 const emit = defineEmits(["selectDates", "changeMonth", "onReservedDayClick"]);
 const daysInWeek = 7;
 const cellCount = 42;
@@ -43,7 +47,7 @@ const selectedDatesInitial = {
   start: null,
   end: null,
 };
-//
+
 const selectedDates = ref<{
   start: ICalendarDateCreate | null;
   end: ICalendarDateCreate | null;
@@ -95,6 +99,33 @@ const daysCount = computed(() => {
   }
 });
 
+const totalPrice = computed(() => {
+  if (
+    selectedStartDate.value &&
+    selectedEndDate.value &&
+    daysCount.value &&
+    props.price
+  ) {
+    // Перебираємо всі дні від стартової до кінцевої дати
+    const daysArr = Array.from(
+      { length: daysCount.value },
+      (_, i) => selectedStartDate.value?.getDay() + i
+    );
+    const totalPrice = daysArr.reduce((prev, curr) => {
+      if (curr === 5 || curr === 6) {
+        prev += props.price?.weekend_price; // Вихідні
+      } else {
+        prev += props.price?.weekday_price; // Будні
+      }
+      return prev;
+    }, 0);
+
+    return totalPrice;
+  } else {
+    return 0;
+  }
+});
+
 const initialCalendarPageDates = computed(() => {
   const year = currYear.value;
   const month = currMonth.value;
@@ -133,9 +164,11 @@ const initialCalendarPageDates = computed(() => {
   }
   return datesArr.map((date, index) => {
     const full_date = `${date.year}-${date.month}-${date.day}`;
+    const day_number = new Date(full_date).getDay();
     return {
       id: index,
       full_date,
+      day_number,
       ...date,
     };
   });
@@ -306,6 +339,7 @@ const onSelectDates = () => {
       toRaw({
         ...selectedDates.value,
         days_count: daysCount.value,
+        total_price: totalPrice.value,
       })
     );
     clearDates();

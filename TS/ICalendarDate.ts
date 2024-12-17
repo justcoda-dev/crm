@@ -34,9 +34,11 @@ export interface ICalendarDateCreate {
   filter_date: number;
   id: ID;
   full_date: string;
+  day_number: number;
 }
 export interface ICalendarCreateSelectedDates {
   start: ICalendarDateCreate;
   end: ICalendarDateCreate;
+  total_price: number;
   days_count: number;
 }

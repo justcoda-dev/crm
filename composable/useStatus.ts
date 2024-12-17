@@ -12,7 +12,9 @@ export const useStatus = () => {
   };
   const hideStatus = () => {
     statusState.value = false;
-    statusProps.value = {};
+    statusProps.value = {
+      status: "",
+    };
   };
   return {
     showStatus,

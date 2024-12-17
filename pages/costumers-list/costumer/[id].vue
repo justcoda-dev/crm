@@ -37,12 +37,13 @@ const costumerId = computed(() =>
     ? parseInt(route.params.id[0])
     : parseInt(route.params.id)
 );
-const costumer = await app.$costumerService.getCostumerById(costumerId.value);
+const costumer = await app.$costumerService.getDataById(costumerId.value);
 
 const onDateClick = async (calendarDate: ICalendarDateFromDb) => {
   const date = new Date(calendarDate.start);
-  const { data: calendarDateFromDb } =
-    await app.$calendarDateService.getCalendarDateById(calendarDate.id);
+  const calendarDateFromDb = await app.$calendarDateService.getDataById(
+    calendarDate.id
+  );
 
   router.push({
     path: `/hotel/${calendarDateFromDb.value?.data.hotel.id}`,

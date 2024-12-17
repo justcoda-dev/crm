@@ -1,15 +1,44 @@
 <template>
   <v-container class="py-4">
-    {{ options }}
-    <component :is="components[currComponent]"></component>
+    <template v-for="(setting, index) of settingsState" :key="setting.id">
+      <settings-card
+        class="my-4"
+        @update:model-value="onUpdate($event, index)"
+        @on-submit="onSubmit(index)"
+        @on-cancel="onCancel(index)"
+        :setting="setting"
+      ></settings-card>
+    </template>
   </v-container>
 </template>
 
 <script lang="ts" setup>
+import SettingsCard from "~/components/cards/SettingsCard.vue";
+
 const app = useNuxtApp();
-const { data: options } = await app.$apiFetch("/options?populate=*");
-const components = shallowRef({});
-const currComponent = ref();
+const { data: dataSettings, refresh: refreshDataSettings } =
+  await app.$settingService.getSettings();
+
+const settingsFromDb = computed(() => {
+  if (dataSettings.value) {
+    return dataSettings.value.data.sort((a, b) => a.id - b.id);
+  } else {
+    return [];
+  }
+});
+
+const settingsState = ref([...settingsFromDb.value]);
+
+const onUpdate = (setting: any, index: number) => {
+  settingsState.value[index] = setting;
+};
+const onSubmit = async (index: number) => {
+  await app.$settingService.updateSetting(settingsState.value[index]);
+  refreshDataSettings();
+};
+const onCancel = (index: number) => {
+  settingsState.value[index] = { ...settingsFromDb.value[index] };
+};
 </script>
 
 <style lang="scss" scoped></style>

@@ -41,6 +41,7 @@ export interface ICostumerUpdate {
   costumers_count?: number;
 }
 export interface ICostumerNewCreate {
+  id: ID;
   name: string;
   phone: string;
   costumer_from_db: boolean;

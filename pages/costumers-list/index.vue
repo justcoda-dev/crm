@@ -31,16 +31,12 @@ import { useDialog } from "~/composable/useDialog";
 import CostumersTable from "../../components/tables/CostumersTable.vue";
 import { useMyMobileStore } from "~/store/mobile";
 import { useMyUserStore } from "~/store/user";
+import type { ICalendarDateFromDb } from "~/TS/ICalendarDate";
 
-import type {
-  ICalendarDateDataFromDb,
-  ICalendarDateFromDb,
-  ICalendarDates,
-} from "~/TS/ICalendarDate";
 import { useStatus } from "~/composable/useStatus";
-import { useCreateCostumerForm } from "~/composable/useCreateCostumerForm";
 import type { ICostumerCreate } from "~/TS/ICostumer";
 import ConfirmForm from "~/components/forms/ConfirmForm.vue";
+import { useForm } from "~/composable/useForm";
 
 const app = useNuxtApp();
 const mobileStore = useMyMobileStore();
@@ -48,7 +44,8 @@ const userStore = useMyUserStore();
 
 const dialog = useDialog();
 const status = useStatus();
-const createForm = useCreateCostumerForm();
+const createForm = useForm(app.$costumerService);
+
 const { mobile } = storeToRefs(mobileStore);
 const { userHotels, user } = storeToRefs(userStore);
 
@@ -56,7 +53,8 @@ const hotelIds = computed(() =>
   userHotels.value ? userHotels.value?.map((hotel) => hotel.id) : []
 );
 const { data: costumers, refresh: refreshCostumers } = useAsyncData(
-  async () => await app.$costumerService.getCostumersByHotels(hotelIds.value)
+  async () =>
+    await app.$costumerService.getDataByFilter(hotelIds.value, "hotels")
 );
 
 const search = ref("");
@@ -78,13 +76,15 @@ const onCreateCostumerForm = () => {
       submitClick: async (costumer: ICostumerCreate) => {
         try {
           if (user) {
-            const createdCostumer = await createForm.createCostumer(costumer);
-            const createdCostumerWithRelation =
-              await createForm.addRelationsToCostumer({
+            const createdCostumer = await createForm.submitForm(costumer);
+            const createdCostumerWithRelation = await createForm.update(
+              {
                 ...createdCostumer,
                 hotels: userHotels.value,
                 user: user.value,
-              });
+              },
+              createdCostumer.id
+            );
             console.log(createdCostumerWithRelation);
             status.showStatus({
               status: "Клієнта створено успішно",
@@ -121,22 +121,24 @@ const onDeleteCostumer = async () => {
           try {
             const costumerIds = selected.value.map((costumer) => costumer.id);
             const { data: datesToDelete } =
-              await app.$calendarDateService.getCalendarDatesFilteredByIds<ICalendarDates>(
+              await app.$calendarDateService.getDataByFilter(
                 costumerIds,
                 "costumer"
               );
+
             await Promise.all(
-              datesToDelete.map(
-                async (date) =>
-                  await app.$calendarDateService.deleteCalendarDateById(date.id)
+              datesToDelete.value.data.map(
+                async (date: ICalendarDateFromDb) =>
+                  await app.$calendarDateService.deleteById(date.id)
               )
             );
             await Promise.all(
               selected.value.map(
                 async (costumer) =>
-                  await app.$costumerService.deleteCostumer(costumer.id)
+                  await app.$costumerService.deleteById(costumer.id)
               )
             );
+
             dialog.hideComponent();
             refreshCostumers();
             status.showStatus({
@@ -144,6 +146,7 @@ const onDeleteCostumer = async () => {
               type: "success",
             });
           } catch (error) {
+            console.error(error);
             dialog.hideComponent();
             status.showStatus({
               status: "При видаленні сталсь помилка",

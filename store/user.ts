@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { useMyAuthStore } from "./auth";
 import type { IUser } from "~/TS/IUser";
 import type { IHotel } from "~/TS/IHotel";
-import type { IEnterpirce } from "~/TS/IEnterprice";
+import type { IEnterpirse } from "~/TS/IEnterprice";
 
 export const useMyUserStore = defineStore("myUserStore", () => {
   const store = useMyAuthStore();
@@ -10,14 +10,15 @@ export const useMyUserStore = defineStore("myUserStore", () => {
   const user = ref<IUser | null>();
   const loading = ref(false);
   const userHotels = computed<IHotel[] | undefined>(() => user.value?.hotels);
-  const userEnterprice = computed<IEnterpirce | undefined>(
-    () => user.value?.enterprice
+  const userEnterprise = computed<IEnterpirse | undefined>(
+    () => user.value?.enterprise
   );
 
   const getUser = async () => {
     try {
       loading.value = true;
-      const userData = await app.$userService.getUser();
+      const userData = await app.$userService.getData();
+
       user.value = userData;
       loading.value = false;
     } catch (error: any) {
@@ -29,5 +30,5 @@ export const useMyUserStore = defineStore("myUserStore", () => {
     }
   };
 
-  return { user, getUser, userHotels, userEnterprice, loading };
+  return { user, getUser, userHotels, userEnterprise, loading };
 });

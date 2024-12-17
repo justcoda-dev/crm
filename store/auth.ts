@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import type { ILoginFormData } from "~/components/forms/LoginForm.vue";
 import type { IRegistrationFormData } from "~/components/forms/RegistrationForm.vue";
 import { useMyUserStore } from "./user";
-import type { IEnterpircesData } from "~/TS/IEnterprice";
+import type { IEnterpirsesData } from "~/TS/IEnterprice";
 
 export const useMyAuthStore = defineStore("myAuthStore", () => {
   const userStore = useMyUserStore();
@@ -51,7 +51,7 @@ export const useMyAuthStore = defineStore("myAuthStore", () => {
     try {
       loading.value = true;
 
-      const { data: checkSecretKey }: { data: IEnterpircesData } =
+      const { data: checkSecretKey }: { data: IEnterpirsesData } =
         await app.$apiFetch(
           `/enterprises?filters[secret_key]=${formData.secret_key}`
         );
