@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-container class="h-100 flex">
+    <v-container class="pa-6 h-100 flex">
       <slot />
     </v-container>
   </v-app>

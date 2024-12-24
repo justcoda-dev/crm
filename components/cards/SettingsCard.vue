@@ -1,7 +1,7 @@
 <template>
-  <v-card class="py-4">
+  <v-card class="pa-3">
     <v-card-title>{{ setting.title }}</v-card-title>
-    <v-card-text>
+    <v-card-text class="pa-6">
       <template
         v-for="(setting, index) of props.setting.component"
         :key="setting.id"
@@ -12,17 +12,21 @@
           v-on="componentEvents(setting, index)[setting.__component]"
         ></component>
       </template>
+      <v-card-actions class="align-self-end">
+        <v-btn class="mr-3" color="primary" @click="onSumbit">{{
+          $t("button-submit")
+        }}</v-btn>
+        <v-btn variant="tonal" @click="onCancel">{{
+          $t("button-cancel")
+        }}</v-btn>
+      </v-card-actions>
     </v-card-text>
-    <v-card-actions>
-      <v-btn @click="onSumbit">{{ $t("button-submit") }}</v-btn>
-      <v-btn @click="onCancel">{{ $t("button-cancel") }}</v-btn>
-    </v-card-actions>
   </v-card>
 </template>
 
 <script lang="ts" setup>
 import { VCheckbox, VTextField } from "vuetify/components";
-
+// в потрібно від кількості робити масив з масивами
 interface IProps {
   setting: any;
 }
@@ -60,12 +64,12 @@ const componentProps = (optionComponent: { value: any; title: string }) => {
     "input.text-input": {
       modelValue: optionComponent.value,
       label: optionComponent.title,
-      variant: "underlined",
     },
     "input.checkbox-option": {
       modelValue: optionComponent.value,
       label: optionComponent.title,
       checked: optionComponent.value,
+      color: "primary",
     },
   };
 };

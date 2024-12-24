@@ -21,6 +21,8 @@
   "text-field.password-repeat.placeholder": "Введіть пароль ще раз",
   "text-field.name.placeholder": "Введіть імя",
   "text-field.search": "Пошук",
+  "text-field.max-count.placeholder": "Максимальна кількість клієнтів",
+  "text-field.location.placeholder": "Максимальна кількість клієнтів",
   "button-forgot.login": "Забули пароль ?",
   "button-forgot.password": "Забули пароль ?",
   "button-login": "Увійти",

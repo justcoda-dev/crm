@@ -10,7 +10,6 @@
         {{ $t("text-field.email.name") }}
       </div>
       <v-text-field
-        density="compact"
         prepend-inner-icon="mdi-email-outline"
         variant="outlined"
         v-model="form.model.value.email"
@@ -31,7 +30,6 @@
         </a>
       </div>
       <v-text-field
-        density="compact"
         prepend-inner-icon="mdi-lock-outline"
         variant="outlined"
         v-model="form.model.value.password"
@@ -48,7 +46,7 @@
         color="surface-variant"
         variant="tonal"
       >
-        <v-card-text class="text-medium-emphasis text-caption">
+        <v-card-text class="text-medium-emphasis text-caption px-6 pt-0">
           {{ props.errorMessage.data.error.name }}
         </v-card-text>
       </v-card>

@@ -11,9 +11,7 @@
       </div>
 
       <v-text-field
-        density="compact"
         prepend-inner-icon="mdi-email-outline"
-        variant="outlined"
         v-model="formData.email"
         :placeholder="$t('text-field.email.placeholder')"
       />
@@ -22,10 +20,8 @@
       </div>
 
       <v-text-field
-        density="compact"
         placeholder="Сикретний код підприємства"
         prepend-inner-icon="mdi-email-outline"
-        variant="outlined"
         v-model="formData.secret_key"
       />
       <div
@@ -37,7 +33,6 @@
       <v-text-field
         prepend-inner-icon="mdi-lock-outline"
         variant="outlined"
-        density="compact"
         v-model="formData.password"
         :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
         :type="visible ? 'text' : 'password'"
@@ -52,8 +47,6 @@
 
       <v-text-field
         prepend-inner-icon="mdi-lock-outline"
-        variant="outlined"
-        density="compact"
         v-model="formData.passwordRepeat"
         :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
         :type="visible ? 'text' : 'password'"

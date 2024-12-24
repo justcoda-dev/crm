@@ -1,5 +1,8 @@
 <template>
-  <div class="d-flex flex-column align-center">
+  <div
+    class="c w-100 d-flex flex-column align-center"
+    :style="{ height: height + 'px', background: '#fff' }"
+  >
     <calendar-header
       class="calendar__header"
       @prevMonth="onPrevMonth"
@@ -42,7 +45,12 @@ const lastMonth = 12;
 const currDate = ref(new Date(props.defaultDate || Date.now()));
 const currYear = ref(currDate.value.getFullYear());
 const currMonth = ref(currDate.value.getMonth() + 1);
-
+const height = ref();
+onMounted(() => {
+  watchEffect(() => {
+    height.value = window.innerHeight - 110;
+  });
+});
 const selectedDatesInitial = {
   start: null,
   end: null,

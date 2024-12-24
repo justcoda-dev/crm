@@ -2,7 +2,7 @@
   <v-theme-provider>
     <v-app>
       <Header :headerMenuList="headerMenuList" />
-      <v-main class="bg-grey-lighten-5">
+      <v-main class="background">
         <slot />
 
         <Dialog v-model="dialog.dialogState.value">

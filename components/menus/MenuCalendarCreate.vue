@@ -1,13 +1,13 @@
 <template>
   <v-card>
     <v-card-actions>
-      <v-btn color="primary" outlined @click="onCreateNew">
+      <v-btn color="primary" @click="onCreateNew">
         {{ $t("button-create.new-costumer") }}
       </v-btn>
-      <v-btn color="primary" outlined @click="onCreate">
+      <v-btn color="primary" @click="onCreate">
         {{ $t("button-create.costumer") }}
       </v-btn>
-      <v-btn color="primary" outlined @click="onCancel">
+      <v-btn color="primary" @click="onCancel">
         {{ $t("button-cancel") }}
       </v-btn>
     </v-card-actions>

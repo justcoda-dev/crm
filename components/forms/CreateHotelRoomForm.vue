@@ -1,6 +1,9 @@
 <template>
   <v-card class="pa-3">
-    <v-card-title class="text-h5 text-center">Створити Готель</v-card-title>
+    <v-card-title class="text-h5 text-center">{{
+      props.title || "Створити кімнату"
+    }}</v-card-title>
+
     <v-form @submit.prevent="onSubmit">
       <v-card-text class="pa-6">
         <v-combobox
@@ -14,12 +17,11 @@
         />
         <v-text-field
           class="px-3 pb-3"
-          v-model="form.location"
-          :label="$t('text-field.location.placeholder')"
+          v-model="form.max_count"
+          :label="$t('text-field.max-count.placeholder')"
           :hide-no-data="hideNoData"
           :error-messages="errorMessages"
         />
-
         <v-card-actions class="justify-center ma-3"
           ><v-btn class="mr-4" type="submit" color="primary">
             {{ $t("button-submit") }}
@@ -35,13 +37,15 @@
 </template>
 
 <script lang="ts" setup>
-interface IProps {}
+interface IProps {
+  title?: string;
+}
 const props = defineProps<IProps>();
 const emit = defineEmits(["onSubmit", "onCancel"]);
 const menuState = ref(false);
 const initialForm = {
   name: "",
-  location: "",
+  max_count: "",
 };
 const form = ref(initialForm);
 const hotelsList = ref();

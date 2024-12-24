@@ -59,11 +59,12 @@ export default defineNuxtPlugin((nuxtApp) => {
       }
     },
 
-    getDataByFilter: async <T>(ids: ID[] | ID, filterKey: string) => {
+    getDataByFilter: async (obj: { [key: string]: ID | ID[] | string }) => {
       try {
-        return await app.$useApiFetch<T>(
-          `/calendar-dates?${requestFiltersCreator(ids, filterKey)}&populate=*`
+        const { data } = await app.$apiFetch<ICalendarDateDataFromDb>(
+          `/calendar-dates?${requestFiltersCreator(obj)}&populate=*`
         );
+        return data;
       } catch (error) {
         console.error(error);
         throw error;

@@ -31,6 +31,7 @@ const dialogComponents = shallowRef(<{ [key: string]: Component }>{
 
 const dialogProps = computed(() => ({
   modelValue: dialogComponentShow.value,
+  width: mobile.value ? "auto" : "900px",
 }));
 
 const dialogEvents = {

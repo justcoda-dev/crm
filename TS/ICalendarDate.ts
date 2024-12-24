@@ -12,6 +12,7 @@ export interface ICalendarDateFromDb {
   costumer: ICostumer;
   user: IUser;
   hotel: IHotel;
+  hotel_room: any;
 }
 export interface ICalendarDateDataFromDb {
   data: ICalendarDateFromDb;
@@ -35,10 +36,12 @@ export interface ICalendarDateCreate {
   id: ID;
   full_date: string;
   day_number: number;
+  hotel_room: any;
 }
 export interface ICalendarCreateSelectedDates {
   start: ICalendarDateCreate;
   end: ICalendarDateCreate;
   total_price: number;
   days_count: number;
+  hotel_room: any;
 }

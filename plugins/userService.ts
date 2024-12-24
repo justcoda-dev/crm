@@ -1,6 +1,6 @@
 import { requestFiltersCreator } from "~/functions/requestFiltersCreate";
 import type { IService } from "~/TS/IService";
-import type { IUser } from "~/TS/IUser";
+import type { IUser, IUserData } from "~/TS/IUser";
 import type { ID } from "~/TS/myTypes";
 export default defineNuxtPlugin((nuxtApp) => {
   const app = useNuxtApp();
@@ -16,11 +16,12 @@ export default defineNuxtPlugin((nuxtApp) => {
         throw error;
       }
     },
-    getDataByFilter: async (ids: ID | ID[], filterKey: string) => {
+    getDataByFilter: async (obj: { [key: string]: ID | ID[] | string }) => {
       try {
-        return await app.$apiFetch<IUser[]>(
-          `users?${requestFiltersCreator(ids, filterKey)}&populate=*`
+        const { data } = await app.$apiFetch<IUserData>(
+          `users?${requestFiltersCreator(obj)}&populate=*`
         );
+        return data;
       } catch (error) {
         console.error(error);
         throw error;

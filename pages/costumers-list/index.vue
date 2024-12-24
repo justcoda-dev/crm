@@ -1,18 +1,27 @@
 <template>
-  <v-container class="py-4">
-    <v-row :class="{ 'flex-column': mobile }">
-      <v-col>
+  <v-container class="pa-6 max-width-100">
+    <v-row
+      class="px-4 pt-4"
+      no-gutters
+      style="background: #fff"
+      :class="{ 'flex-column': mobile }"
+    >
+      <v-col class="d-flex justify-start">
         <v-text-field
           append-inner-icon="mdi-magnify"
           v-model="search"
           :label="$t('text-field.search')"
         />
       </v-col>
-      <v-col>
-        <v-btn :disabled="!selected.length" @click="onDeleteCostumer">{{
-          $t("button-delete")
-        }}</v-btn>
-        <v-btn @click="onCreateCostumerForm">{{
+      <v-col class="d-flex justify-end">
+        <v-btn
+          class="mr-3"
+          color="error"
+          :disabled="!selected.length"
+          @click="onDeleteCostumer"
+          >{{ $t("button-delete") }}</v-btn
+        >
+        <v-btn color="primary" @click="onCreateCostumerForm">{{
           $t("button-create.new-costumer")
         }}</v-btn>
       </v-col>
@@ -121,10 +130,9 @@ const onDeleteCostumer = async () => {
           try {
             const costumerIds = selected.value.map((costumer) => costumer.id);
             const { data: datesToDelete } =
-              await app.$calendarDateService.getDataByFilter(
-                costumerIds,
-                "costumer"
-              );
+              await app.$calendarDateService.getDataByFilter({
+                costumer: costumerIds,
+              });
 
             await Promise.all(
               datesToDelete.value.data.map(

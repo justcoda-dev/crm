@@ -1,22 +1,34 @@
 <template>
-  <v-card class="pa-4">
-    <v-card-title class="text-center">
+  <v-card class="pa-3">
+    <v-card-title>
       {{ props.costumer.name }}
     </v-card-title>
-    <p class="text-center">{{ props.costumer.phone }}</p>
-    <v-card-text v-if="props.costumerDate" class="text-center py-2 px-8">
-      <p>з {{ props.costumerDate?.start }} по {{ props.costumerDate?.end }}</p>
-      <p>Загальна ціна {{ props.costumerDate?.total_price }} грн</p>
+    <v-card-text class="pa-6" v-if="props.costumerDate">
+      <v-list>
+        <v-list-item
+          >Мобільний телефон:
+          <a href="tel:{{ props.costumer.phone }}">{{
+            props.costumer.phone
+          }}</a></v-list-item
+        >
+        <v-list-item>
+          Заброньований з {{ props.costumerDate?.start }} по
+          {{ props.costumerDate?.end }}
+        </v-list-item>
+        <v-list-item>
+          Загальна ціна складає {{ props.costumerDate?.total_price }} грн
+        </v-list-item>
+      </v-list>
     </v-card-text>
     <v-card-actions class="mx-auto">
       <v-btn
-        variant="text"
-        class="mx-2"
+        class="mr-4"
+        color="error"
         @click="onClickDelete(props.costumer)"
         >{{ $t("button-delete") }}</v-btn
       >
 
-      <v-btn variant="text" class="mx-2" @click="onClickCancel">{{
+      <v-btn variant="tonal" @click="onClickCancel">{{
         $t("button-close")
       }}</v-btn>
     </v-card-actions>

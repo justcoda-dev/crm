@@ -21,10 +21,10 @@ export default defineNuxtPlugin((nuxtApp) => {
         throw error;
       }
     },
-    getDataByFilter: async (ids: ID | ID[], filterKey: string = "users") => {
+    getDataByFilter: async (obj: { [key: string]: ID | ID[] | string }) => {
       try {
         const { data } = await app.$apiFetch<IHotelsData>(
-          `hotels?${requestFiltersCreator(ids, filterKey)}&populate=*`
+          `hotels?${requestFiltersCreator(obj)}&populate=*`
         );
         return data;
       } catch (error) {

@@ -63,10 +63,10 @@ export default defineNuxtPlugin((nuxtApp) => {
         throw error;
       }
     },
-    getDataByFilter: async (ids: ID[] | ID, filterKey: string) => {
+    getDataByFilter: async (obj: { [key: string]: ID | ID[] | string }) => {
       try {
         const { data } = await app.$apiFetch<ICostumersData>(
-          `/costumers?${requestFiltersCreator(ids, filterKey)}`
+          `/costumers?${requestFiltersCreator(obj)}`
         );
         return data;
       } catch (error) {

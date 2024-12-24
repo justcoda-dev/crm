@@ -1,10 +1,10 @@
 <template>
-  <v-form @submit.prevent="onSubmitClick">
-    <v-card class="pa-4 justify-center">
-      <v-card-title>Створити клієнта</v-card-title>
-      <v-card-text class="px-8 py-2">
+  <v-card class="pa-3">
+    <v-card-title class="text-h5 text-center">Створити клієнта</v-card-title>
+    <v-form @submit.prevent="onSubmitClick">
+      <v-card-text class="pa-6">
         <v-combobox
-          variant="underlined"
+          class="px-3 pb-3"
           v-model="form.model.value.name"
           v-model:menu="menuState"
           :label="$t('text-field.name.placeholder')"
@@ -25,22 +25,27 @@
           </template>
         </v-combobox>
         <v-combobox
-          variant="underlined"
+          class="px-3 pb-3"
           v-model.trim="form.model.value.phone"
           :label="$t('text-field.phone.placeholder')"
           :error-messages="form.errorMessages.value.phone"
         />
+        <v-card-actions class="ma-3 justify-center">
+          <v-btn
+            class="mr-3"
+            color="primary"
+            type="submit"
+            :disabled="disabledSubmitButton"
+          >
+            {{ $t("button-submit") }}
+          </v-btn>
+          <v-btn variant="tonal" @click="onCancel">
+            {{ $t("button-cancel") }}
+          </v-btn>
+        </v-card-actions>
       </v-card-text>
-      <v-card-actions class="mx-auto">
-        <v-btn variant="text" type="submit" :disabled="disabledSubmitButton">
-          {{ $t("button-submit") }}
-        </v-btn>
-        <v-btn variant="text" @click="onCancel">
-          {{ $t("button-cancel") }}
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-form>
+    </v-form>
+  </v-card>
 </template>
 
 <script lang="ts" setup>
@@ -102,7 +107,7 @@ const form = useValidation(initialForm, [
         errorMessage: "Номер телефону мітить біль 13 символів",
       },
       {
-        fn: (value: string) => value,
+        fn: (value: string) => value === "",
         errorMessage: "Номер складається тільки з цифер",
       },
     ],
@@ -139,13 +144,11 @@ watch(
   () => form.model.value.name,
   _debounce(async (name) => {
     const userStore = useMyUserStore();
-
     try {
       if (name?.length > 3 && !form.model.value.costumer_from_db) {
         const { data: costumers }: any = await app.$apiFetch(
           `/costumers?filters[name][$containsi]=${name}&${requestFiltersCreator(
-            userStore.userHotels.map((hotel) => hotel.id),
-            "hotels"
+            { hotels: userStore.userHotels.map((hotel) => hotel.id) }
           )}`
         );
 

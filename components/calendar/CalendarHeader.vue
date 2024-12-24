@@ -1,19 +1,13 @@
 <template>
   <div class="calendar-header">
-    <div class="calendar-header__navigation">
-      <v-btn
-        icon="mdi-chevron-left"
-        variant="text"
-        @click="onPrevMonth"
-      ></v-btn>
-      <div class="d-flex justify-center align-center"><slot></slot></div>
-      <v-btn
-        icon="mdi-chevron-right"
-        variant="text"
-        @click="onNextMonth"
-      ></v-btn>
+    <div class="calendar-header__navigation my-5">
+      <v-btn icon="mdi-chevron-left" @click="onPrevMonth"></v-btn>
+      <div class="d-flex justify-center align-center text-h5">
+        <slot></slot>
+      </div>
+      <v-btn icon="mdi-chevron-right" @click="onNextMonth"></v-btn>
     </div>
-    <div class="calendar-header__days">
+    <div class="calendar-header__days text-subtitle-1 font-weight-bold py-2">
       <template v-for="day of days" :key="day.id">
         <div class="calendar-header__day-name">{{ day }}</div>
       </template>
@@ -23,13 +17,13 @@
 
 <script lang="ts" setup>
 const days = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
+  "Понеділок",
+  "Вівторок",
+  "Середа",
+  "Четвер",
+  "П'ятниця",
+  "Субота",
+  "Неділя",
 ];
 const emit = defineEmits(["prevMonth", "nextMonth"]);
 const onPrevMonth = () => {
@@ -42,24 +36,29 @@ const onNextMonth = () => {
 
 <style lang="scss">
 .calendar-header {
+  width: 100%;
   display: flex;
   flex-direction: column;
-
+  color: #374451;
   &__navigation {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
   }
   &__days {
     width: 100%;
     display: grid;
     text-align: center;
-    grid-template-columns: repeat(7, 85px);
-    @media screen and (max-width: 600px) {
-      grid-template-columns: repeat(7, 50px);
-    }
+    grid-template-columns: repeat(7, calc(100% / 7));
+    border-top: 1px solid #22303e1f;
+    border-bottom: 1px solid #22303e1f;
+    // @media screen and (max-width: 600px) {
+    //   grid-template-columns: repeat(7, 50px);
+    // }
   }
   &__day-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     @media screen and (max-width: 600px) {
       font-size: 10px;
     }

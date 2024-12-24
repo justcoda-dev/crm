@@ -1,8 +1,8 @@
 <template>
-  <v-container class="py-4">
+  <v-container class="pa-6 settings">
     <template v-for="(setting, index) of settingsState" :key="setting.id">
       <settings-card
-        class="my-4"
+        class="mb-6"
         @update:model-value="onUpdate($event, index)"
         @on-submit="onSubmit(index)"
         @on-cancel="onCancel(index)"
@@ -16,12 +16,13 @@
 import SettingsCard from "~/components/cards/SettingsCard.vue";
 
 const app = useNuxtApp();
-const { data: dataSettings, refresh: refreshDataSettings } =
-  await app.$settingService.getSettings();
+const { data: dataSettings, refresh: refreshDataSettings } = await useAsyncData(
+  async () => await app.$settingService.getData()
+);
 
 const settingsFromDb = computed(() => {
   if (dataSettings.value) {
-    return dataSettings.value.data.sort((a, b) => a.id - b.id);
+    return dataSettings.value.sort((a: any, b: any) => a.id - b.id);
   } else {
     return [];
   }
@@ -33,7 +34,10 @@ const onUpdate = (setting: any, index: number) => {
   settingsState.value[index] = setting;
 };
 const onSubmit = async (index: number) => {
-  await app.$settingService.updateSetting(settingsState.value[index]);
+  await app.$settingService.updateDataById(
+    settingsState.value[index],
+    settingsState.value[index].id
+  );
   refreshDataSettings();
 };
 const onCancel = (index: number) => {
@@ -41,7 +45,14 @@ const onCancel = (index: number) => {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.settings {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  flex: 0 1 auto;
+}
+</style>
 <!-- 1.ціна будні і вихідні 2.кількість максимальна людей 3.максимальний період
     4.мінімальна кількість ночей 5. Окрема сторінка з історією замовлень
     користувача( і можна в таблиці зробити шоб розгортався компонент юзера з

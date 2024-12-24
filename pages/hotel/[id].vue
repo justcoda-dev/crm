@@ -1,16 +1,18 @@
 <template>
-  <v-container class="py-4">
-    <Calendar
-      :reserved-dates="reservedDates"
-      :default-date="defaultDate"
-      :price="{
-        weekday_price: weekDaysPrice,
-        weekend_price: weekEndsPrice,
-      }"
-      @select-dates="onSelectDates"
-      @change-month="onChangeMonth"
-      @on-reserved-day-click="onReservedDayClick"
-    ></Calendar>
+  <v-container class="pa-6 w-100">
+    <v-card>
+      <Calendar
+        :reserved-dates="reservedDates"
+        :default-date="defaultDate"
+        :price="{
+          weekday_price: weekDaysPrice,
+          weekend_price: weekEndsPrice,
+        }"
+        @select-dates="onSelectDates"
+        @change-month="onChangeMonth"
+        @on-reserved-day-click="onReservedDayClick"
+      ></Calendar>
+    </v-card>
   </v-container>
 </template>
 
@@ -36,7 +38,9 @@ const router = useRouter();
 const dialog = useDialog();
 const status = useStatus();
 const { addSelectedDates } = useCalendar();
-const { submitForm, update } = useForm(app.$costumerService);
+const { submitForm: submitCreateCostumerForm, update } = useForm(
+  app.$costumerService
+);
 
 const { user } = storeToRefs(useMyUserStore());
 const defaultDate = ref(
@@ -44,7 +48,8 @@ const defaultDate = ref(
     ? new Date(`${route.query.year}- ${route.query.month}`)
     : new Date()
 );
-const price = await app.$settingService.getSettingByKey("price");
+const price = await app.$settingService.getDataByFilter({ key: "price" });
+
 const weekDaysPrice = computed(() =>
   parseInt(price.find((item) => item.key === "weekday").value)
 );
@@ -52,28 +57,43 @@ const weekEndsPrice = computed(() =>
   parseInt(price.find((item) => item.key === "weekend").value)
 );
 
-const reservedDates = computed(() => {
-  if (reservedDatesData.value) {
-    return reservedDatesData.value.data;
-  } else {
-    return undefined;
-  }
-});
-
 const selectedHotelId = computed(() =>
   !Array.isArray(route.params.id)
     ? parseInt(route.params.id)
     : parseInt(route.params.id[0])
 );
+const selectedHotelRoomId = computed(() => {
+  if (route.query.hotelRoomId) {
+    return !Array.isArray(route.query.hotelRoomId)
+      ? parseInt(route.query.hotelRoomId)
+      : parseInt(route.query.hotelRoomId[0]);
+  } else {
+    return null;
+  }
+});
 
 const { data: reservedDatesData, refresh: refreshCalendarDatesFromDb } =
-  await app.$calendarDateService.getDataByFilter(
-    selectedHotelId.value,
-    "hotel"
+  await useAsyncData(
+    async () =>
+      await app.$calendarDateService.getDataByFilter({
+        hotel_room: selectedHotelRoomId.value,
+        hotel: selectedHotelId.value,
+      }),
+    {
+      watch: [selectedHotelRoomId],
+    }
   );
 
+const reservedDates = computed(() => {
+  if (reservedDatesData.value) {
+    return reservedDatesData.value;
+  } else {
+    return undefined;
+  }
+});
+
 const onChangeMonth = (date: { year: number; month: number }) => {
-  router.push({ query: { ...date } });
+  router.push({ query: { ...route.query, ...date } });
 };
 
 const onReservedDayClick = (
@@ -144,14 +164,20 @@ const onSelectDates = async (
     events: {
       submitClick: async (costumer: ICostumerCreate) => {
         try {
-          if (user.value && selectedHotelId.value && calendarSelectedDates) {
+          console.log("click");
+          if (
+            user.value &&
+            selectedHotelRoomId.value &&
+            calendarSelectedDates
+          ) {
             const [createdDate, createdCostumer] = await Promise.all([
               addSelectedDates({
                 ...calendarSelectedDates,
+                hotel_room: selectedHotelRoomId.value,
                 hotel: selectedHotelId.value,
                 user: user.value.id,
               }),
-              submitForm({
+              submitCreateCostumerForm({
                 ...costumer,
                 user: user.value.id,
                 hotels: selectedHotelId.value,
@@ -162,6 +188,10 @@ const onSelectDates = async (
                 {
                   user: user.value.id,
                   hotels: [...createdCostumer.hotels, selectedHotelId.value],
+                  hotel_rooms: [
+                    ...createdCostumer.hotel_rooms,
+                    selectedHotelRoomId.value,
+                  ],
                   calendar_dates: [
                     ...createdCostumer.calendar_dates,
                     createdDate.id,
@@ -199,6 +229,7 @@ watch(
     if (!route.query.month) {
       router.push({
         query: {
+          ...route.query,
           year: defaultDate.value.getFullYear(),
           month: defaultDate.value.getMonth() + 1,
         },

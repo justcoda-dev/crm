@@ -6,5 +6,5 @@ export interface IService {
   postData: (data: any) => Promise<any>;
   updateDataById: (id: ID, data: any) => Promise<any>;
   deleteById: (id: ID) => Promise<any>;
-  getDataByFilter: (ids: ID[] | ID, filterKey: string) => Promise<any>;
+  getDataByFilter: (obj: { [key: string]: ID | ID[] | string }) => Promise<any>;
 }

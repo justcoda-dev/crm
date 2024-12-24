@@ -1,7 +1,9 @@
 <template>
-  <v-card class="pa-4">
-    <v-card-title>{{ costumer.name }}</v-card-title>
-    <v-card-text>
+  <v-card>
+    <v-card-item>
+      <v-card-title>{{ costumer.name }}</v-card-title>
+    </v-card-item>
+    <v-card-text class="px-6 pt-0">
       <v-list>
         <v-list-item-title>Готелі в яких бронювався:</v-list-item-title>
         <template v-for="hotel of costumer.hotels" :key="hotel.id">

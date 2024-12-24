@@ -31,13 +31,16 @@ const onReservedDayClick = (day: ICalendarDateCreate, type: string) => {
 
 <style lang="scss">
 .calendar-month {
+  width: 100%;
+  height: 100%;
   display: grid;
-  grid-template-columns: repeat(7, 85px);
-  grid-template-rows: repeat(6, 85px);
+  background: #22303e1f;
   gap: 1px;
+  grid-template-columns: repeat(7, calc(100% / 7));
+  grid-template-rows: repeat(6, calc(100% / 6));
+
   @media screen and (max-width: 600px) {
-    grid-template-columns: repeat(7, 52px);
-    grid-template-rows: repeat(6, 52px);
+    // grid-template-rows: repeat(6, 62px);
   }
 }
 </style>
