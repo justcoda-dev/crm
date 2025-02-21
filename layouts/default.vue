@@ -4,7 +4,6 @@
       <Header :headerMenuList="headerMenuList" />
       <v-main class="background">
         <slot />
-
         <Dialog v-model="dialog.dialogState.value">
           <component
             :is="dialog.component.value"

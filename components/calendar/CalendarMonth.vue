@@ -1,12 +1,12 @@
 <template>
   <div class="calendar-month">
-    <template v-for="day of props.days" :key="day.id">
-      <calendar-day
-        :day="day"
-        @onClick="onDayClick"
-        @onReservedClick="onReservedDayClick"
+    <template v-for="(week, index) of calendarWeeks" :key="index">
+      <calendar-week
+        @onDayClick="onDayClick"
+        @onReservedDayClick="onReservedDayClick"
+        :calendarWeek="week"
       >
-      </calendar-day>
+      </calendar-week>
     </template>
   </div>
 </template>
@@ -21,6 +21,22 @@ interface IProps {
 const props = defineProps<IProps>();
 const emit = defineEmits(["onDayClick", "onReservedDayClick"]);
 
+const unFlat = (arr: any[], count: number) => {
+  const result = [];
+  for (
+    let start = 0, end = count;
+    start < arr.length;
+    start += count, end += count
+  )
+    result.push(arr.slice(start, end));
+  return result;
+};
+
+const calendarWeeks = computed(() => {
+  const weeks = unFlat(props.days, 7);
+  return weeks;
+});
+
 const onDayClick = (day: ICalendarDateCreate) => {
   emit("onDayClick", day);
 };
@@ -33,14 +49,5 @@ const onReservedDayClick = (day: ICalendarDateCreate, type: string) => {
 .calendar-month {
   width: 100%;
   height: 100%;
-  display: grid;
-  background: #22303e1f;
-  gap: 1px;
-  grid-template-columns: repeat(7, calc(100% / 7));
-  grid-template-rows: repeat(6, calc(100% / 6));
-
-  @media screen and (max-width: 600px) {
-    // grid-template-rows: repeat(6, 62px);
-  }
 }
 </style>

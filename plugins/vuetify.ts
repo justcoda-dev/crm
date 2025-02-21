@@ -53,9 +53,7 @@ export default defineNuxtPlugin((app) => {
           variant: "flat",
         },
       },
-      VCard: {
-        style: [{ borderRadius: "6px" }],
-      },
+      VCard: {},
     },
   });
   app.vueApp.use(vuetify);

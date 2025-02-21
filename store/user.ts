@@ -18,11 +18,12 @@ export const useMyUserStore = defineStore("myUserStore", () => {
     try {
       loading.value = true;
       const userData = await app.$userService.getData();
-
       user.value = userData;
+
       loading.value = false;
     } catch (error: any) {
       loading.value = false;
+      console.log(Error, error);
       console.error("get user data error", error);
       if (error.status === 401) {
         store.logout();

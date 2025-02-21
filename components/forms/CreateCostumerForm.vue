@@ -107,7 +107,7 @@ const form = useValidation(initialForm, [
         errorMessage: "Номер телефону мітить біль 13 символів",
       },
       {
-        fn: (value: string) => value === "",
+        fn: (value: string) => value,
         errorMessage: "Номер складається тільки з цифер",
       },
     ],
@@ -151,7 +151,7 @@ watch(
             { hotels: userStore.userHotels.map((hotel) => hotel.id) }
           )}`
         );
-
+        console.log(costumers);
         costumersFromDb.value = costumers;
       }
     } catch (e) {

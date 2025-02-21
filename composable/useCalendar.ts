@@ -10,6 +10,7 @@ export const useCalendar = () => {
     selectedCalendarDates: ICalendarCreateSelectedDates & {
       user: ID;
       hotel: ID;
+      costumer: ID;
     }
   ) => {
     try {

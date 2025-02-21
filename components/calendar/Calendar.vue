@@ -1,14 +1,10 @@
 <template>
   <div
-    class="c w-100 d-flex flex-column align-center"
+    class="calendar h-100 d-flex flex-column align-center"
     :style="{ height: height + 'px', background: '#fff' }"
   >
-    <calendar-header
-      class="calendar__header"
-      @prevMonth="onPrevMonth"
-      @nextMonth="onNextMonth"
-    >
-      {{ currMonth }}/{{ currYear }}
+    <calendar-header @prevMonth="onPrevMonth" @nextMonth="onNextMonth">
+      <span style="opacity: 0.87"> {{ currMonth }}/{{ currYear }}</span>
     </calendar-header>
     <calendar-month
       @onDayClick="onDayClick"
@@ -19,8 +15,6 @@
 </template>
 
 <script lang="ts" setup>
-// прикрутити телеграм бота треба, сервак
-
 import { fullDateConvertor } from "~/functions/fullDateConvertor";
 import type {
   ICalendarDateCreate,
@@ -30,7 +24,7 @@ import type {
 interface IProps {
   reservedDates?: ICalendarDateFromDb[];
   defaultDate?: any;
-  price?: {
+  price: {
     weekend_price: number;
     weekday_price: number;
   };
@@ -38,6 +32,10 @@ interface IProps {
 const props = defineProps<IProps>();
 
 const emit = defineEmits(["selectDates", "changeMonth", "onReservedDayClick"]);
+const selectedDatesInitial = {
+  start: null,
+  end: null,
+};
 const daysInWeek = 7;
 const cellCount = 42;
 const firstMonth = 1;
@@ -46,15 +44,6 @@ const currDate = ref(new Date(props.defaultDate || Date.now()));
 const currYear = ref(currDate.value.getFullYear());
 const currMonth = ref(currDate.value.getMonth() + 1);
 const height = ref();
-onMounted(() => {
-  watchEffect(() => {
-    height.value = window.innerHeight - 110;
-  });
-});
-const selectedDatesInitial = {
-  start: null,
-  end: null,
-};
 
 const selectedDates = ref<{
   start: ICalendarDateCreate | null;
@@ -62,6 +51,8 @@ const selectedDates = ref<{
 }>({
   ...selectedDatesInitial,
 });
+const reservedDateBeforeSelected = ref();
+const reservedDateAfterSelected = ref();
 
 const selectedStartDate = computed(() => {
   if (selectedDates.value.start) {
@@ -97,6 +88,7 @@ const lastDayOfMonth = computed(() =>
 const lastDaysOfPrevMonth = computed(() =>
   new Date(currYear.value, currMonth.value - 1, 0).getDate()
 );
+
 const daysCount = computed(() => {
   if (selectedStartDate.value && selectedEndDate.value) {
     const daysDifference =
@@ -114,16 +106,17 @@ const totalPrice = computed(() => {
     daysCount.value &&
     props.price
   ) {
-    // Перебираємо всі дні від стартової до кінцевої дати
-    const daysArr = Array.from(
-      { length: daysCount.value },
-      (_, i) => selectedStartDate.value?.getDay() + i
-    );
+    const daysArr = selectedStartDate.value
+      ? Array.from({ length: daysCount.value }, (_, i) =>
+          selectedStartDate.value ? selectedStartDate.value.getDay() + i : 0
+        )
+      : [];
+
     const totalPrice = daysArr.reduce((prev, curr) => {
       if (curr === 5 || curr === 6) {
-        prev += props.price?.weekend_price; // Вихідні
+        prev += props.price.weekend_price; // Вихідні
       } else {
-        prev += props.price?.weekday_price; // Будні
+        prev += props.price.weekday_price; // Будні
       }
       return prev;
     }, 0);
@@ -236,58 +229,14 @@ const calendarPageDatesWithState = computed(() => {
 
 const calendarPageDates = computed(() => {
   if (selectedStartDate.value) {
-    const selectedStartDateUTC = selectedStartDate.value.getTime();
-
-    const disabledDatesBeforeSelected = calendarPageDatesWithState.value.filter(
-      (date) => {
-        const dateUTC = fullDateConvertor(date.full_date).getTime();
-
-        if (selectedStartDateUTC > dateUTC && date.end_date) {
-          return date;
-        } else if (selectedDates.value.start?.end_date) {
-          return date;
-        }
-      }
-    );
-
-    const disabledDatesAfterSelected = calendarPageDatesWithState.value.filter(
-      (date) => {
-        const dateUTC = fullDateConvertor(date.full_date).getTime();
-        if (selectedStartDateUTC < dateUTC && date.start_date) {
-          return date;
-        }
-        if (selectedDates.value.start?.start_date) {
-          return date;
-        }
-      }
-    );
-
-    const prevUnavailableDate = Math.max(
-      ...disabledDatesBeforeSelected.map(({ full_date }) => {
-        const date = fullDateConvertor(full_date).getTime();
-        if (date < selectedStartDateUTC) {
-          return date;
-        } else {
-          return selectedStartDateUTC;
-        }
-      })
-    );
-
-    const nextUnavailableDate = Math.min(
-      ...disabledDatesAfterSelected.map(({ full_date }) => {
-        const date = fullDateConvertor(full_date).getTime();
-        if (date > selectedStartDateUTC) {
-          return date;
-        } else {
-          return selectedStartDateUTC;
-        }
-      })
-    );
-
     return calendarPageDatesWithState.value.map((date) => {
       const dateUTC = fullDateConvertor(date.full_date).getTime();
-
-      if (dateUTC < prevUnavailableDate || dateUTC > nextUnavailableDate) {
+      if (
+        (dateUTC < reservedDateBeforeSelected.value &&
+          reservedDateBeforeSelected.value !== null) ||
+        (dateUTC > reservedDateAfterSelected.value &&
+          reservedDateAfterSelected.value !== null)
+      ) {
         return { ...date, disabled: true };
       } else {
         return date;
@@ -314,14 +263,59 @@ const onNextMonth = () => {
     currMonth.value = firstMonth;
     currYear.value = currYear.value + 1;
   }
+
   onChangeMonth();
 };
+const setBeforeAndAfterReservedDates = () => {
+  if (!reservedDateBeforeSelected.value && selectedStartDate.value) {
+    const selectedStartDateUTC = selectedStartDate.value.getTime();
+    const reservedDatesBeforeSelected = calendarPageDatesWithState.value.filter(
+      (date) => {
+        const dateUTC = fullDateConvertor(date.full_date).getTime();
+        if (selectedStartDateUTC >= dateUTC && date.end_date) {
+          return date;
+        }
+      }
+    );
+    reservedDateBeforeSelected.value = reservedDatesBeforeSelected.length
+      ? Math.max(
+          ...reservedDatesBeforeSelected.map((date) =>
+            fullDateConvertor(date.full_date).getTime()
+          )
+        )
+      : null;
+  }
+  if (!reservedDateAfterSelected.value && selectedStartDate.value) {
+    const selectedStartDateUTC = selectedStartDate.value.getTime();
+    const reservedDatesAfterSelected = calendarPageDatesWithState.value.filter(
+      (date) => {
+        const dateUTC = fullDateConvertor(date.full_date).getTime();
+        if (selectedStartDateUTC <= dateUTC && date.start_date) {
+          return date;
+        }
+      }
+    );
+    reservedDateAfterSelected.value = reservedDatesAfterSelected.length
+      ? Math.min(
+          ...reservedDatesAfterSelected.map((date) =>
+            fullDateConvertor(date.full_date).getTime()
+          )
+        )
+      : null;
+  }
+};
+
 const onChangeMonth = () => {
   emit("changeMonth", { month: currMonth.value, year: currYear.value });
+  setBeforeAndAfterReservedDates();
 };
 const onDayClick = (day: ICalendarDateCreate) => {
   if (!selectedStartDate.value) {
     selectedDates.value.start = day;
+    console.log(selectedStartDate.value);
+    reservedDateBeforeSelected.value = null;
+    reservedDateAfterSelected.value = null;
+    setBeforeAndAfterReservedDates();
   } else {
     selectedDates.value.end = day;
     onSelectDates();
@@ -354,4 +348,8 @@ const onSelectDates = () => {
   }
 };
 </script>
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.calendar {
+  color: #3b4651;
+}
+</style>

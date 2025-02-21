@@ -1,5 +1,5 @@
 <template>
-  <v-container class="pa-6 max-width-100">
+  <div class="costumers-list">
     <v-row
       class="px-4 pt-4"
       no-gutters
@@ -31,7 +31,7 @@
       :search="search"
       :costumersList="costumersList"
     />
-  </v-container>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -171,4 +171,8 @@ const onDeleteCostumer = async () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.costumers-list {
+  background-color: #fff;
+}
+</style>

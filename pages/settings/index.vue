@@ -1,15 +1,14 @@
 <template>
-  <v-container class="pa-6 settings">
-    <template v-for="(setting, index) of settingsState" :key="setting.id">
+  <div class="settings h-100">
+    <template v-for="(setting, index) of settingsState" :key="index">
       <settings-card
-        class="mb-6"
         @update:model-value="onUpdate($event, index)"
         @on-submit="onSubmit(index)"
         @on-cancel="onCancel(index)"
         :setting="setting"
       ></settings-card>
     </template>
-  </v-container>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -41,6 +40,7 @@ const onSubmit = async (index: number) => {
   refreshDataSettings();
 };
 const onCancel = (index: number) => {
+  console.log(index);
   settingsState.value[index] = { ...settingsFromDb.value[index] };
 };
 </script>

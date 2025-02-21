@@ -1,24 +1,22 @@
 <template>
-  <v-container class="pa-6 w-100">
-    <v-card>
-      <Calendar
-        :reserved-dates="reservedDates"
-        :default-date="defaultDate"
-        :price="{
-          weekday_price: weekDaysPrice,
-          weekend_price: weekEndsPrice,
-        }"
-        @select-dates="onSelectDates"
-        @change-month="onChangeMonth"
-        @on-reserved-day-click="onReservedDayClick"
-      ></Calendar>
-    </v-card>
-  </v-container>
+  <div class="calendar h-100">
+    <Calendar
+      class="pa-1"
+      :reserved-dates="reservedDates"
+      :default-date="defaultDate"
+      :price="{
+        weekday_price: weekDaysPrice,
+        weekend_price: weekEndsPrice,
+      }"
+      @select-dates="onSelectDates"
+      @change-month="onChangeMonth"
+      @on-reserved-day-click="onReservedDayClick"
+    ></Calendar>
+  </div>
 </template>
 
 <script lang="ts" setup>
 import Calendar from "../../components/calendar/Calendar.vue";
-
 import type {
   ICalendarDateCreate,
   ICalendarCreateSelectedDates,
@@ -37,10 +35,10 @@ const route = useRoute();
 const router = useRouter();
 const dialog = useDialog();
 const status = useStatus();
+
 const { addSelectedDates } = useCalendar();
-const { submitForm: submitCreateCostumerForm, update } = useForm(
-  app.$costumerService
-);
+const { submitForm: submitCreateCostumerForm, update: updateCostumer } =
+  useForm(app.$costumerService);
 
 const { user } = storeToRefs(useMyUserStore());
 const defaultDate = ref(
@@ -164,27 +162,27 @@ const onSelectDates = async (
     events: {
       submitClick: async (costumer: ICostumerCreate) => {
         try {
-          console.log("click");
           if (
             user.value &&
             selectedHotelRoomId.value &&
             calendarSelectedDates
           ) {
-            const [createdDate, createdCostumer] = await Promise.all([
-              addSelectedDates({
-                ...calendarSelectedDates,
-                hotel_room: selectedHotelRoomId.value,
-                hotel: selectedHotelId.value,
-                user: user.value.id,
-              }),
-              submitCreateCostumerForm({
-                ...costumer,
-                user: user.value.id,
-                hotels: selectedHotelId.value,
-              }),
-            ]);
+            const createdCostumer = await submitCreateCostumerForm({
+              ...costumer,
+              user: user.value.id,
+              hotels: selectedHotelId.value,
+            });
+
+            const createdDate = await addSelectedDates({
+              ...calendarSelectedDates,
+              hotel_room: selectedHotelRoomId.value,
+              hotel: selectedHotelId.value,
+              user: user.value.id,
+              costumer: createdCostumer.id,
+            });
+
             if (createdCostumer && createdDate) {
-              await update(
+              await updateCostumer(
                 {
                   user: user.value.id,
                   hotels: [...createdCostumer.hotels, selectedHotelId.value],
@@ -241,6 +239,8 @@ watch(
 </script>
 
 <style lang="scss">
+.calendar {
+}
 .costumer-card-form {
   width: 600px;
 }

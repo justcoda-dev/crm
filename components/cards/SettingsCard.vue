@@ -1,5 +1,5 @@
 <template>
-  <v-card class="pa-3">
+  <v-card flat class="settings-card pa-3 w-100">
     <v-card-title>{{ setting.title }}</v-card-title>
     <v-card-text class="pa-6">
       <template
@@ -26,7 +26,7 @@
 
 <script lang="ts" setup>
 import { VCheckbox, VTextField } from "vuetify/components";
-// в потрібно від кількості робити масив з масивами
+
 interface IProps {
   setting: any;
 }
@@ -37,7 +37,7 @@ const components = shallowRef<{ [key: string]: any }>({
   "input.text-input": VTextField,
   "input.checkbox-option": VCheckbox,
 });
-
+const submitDisabled = ref(true);
 const setting = ref(props.setting);
 const componentEvents = (optionComponent: any, index: number) => {
   return {
@@ -64,6 +64,11 @@ const componentProps = (optionComponent: { value: any; title: string }) => {
     "input.text-input": {
       modelValue: optionComponent.value,
       label: optionComponent.title,
+      buttons: {
+        submit: {
+          disabled: true,
+        },
+      },
     },
     "input.checkbox-option": {
       modelValue: optionComponent.value,
@@ -76,6 +81,7 @@ const componentProps = (optionComponent: { value: any; title: string }) => {
 
 const onSumbit = () => {
   emit("onSubmit");
+  console.log("submit");
 };
 const onCancel = () => {
   emit("onCancel");
@@ -83,4 +89,4 @@ const onCancel = () => {
 };
 </script>
 
-<style></style>
+<style lang="scss"></style>

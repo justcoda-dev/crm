@@ -7,9 +7,9 @@
       </div>
       <v-btn icon="mdi-chevron-right" @click="onNextMonth"></v-btn>
     </div>
-    <div class="calendar-header__days text-subtitle-1 font-weight-bold py-2">
+    <div class="calendar-header__days text-subtitle-1 font-weight-bold">
       <template v-for="day of days" :key="day.id">
-        <div class="calendar-header__day-name">{{ day }}</div>
+        <div class="calendar-header__day-name py-2">{{ day }}</div>
       </template>
     </div>
   </div>
@@ -39,7 +39,8 @@ const onNextMonth = () => {
   width: 100%;
   display: flex;
   flex-direction: column;
-  color: #374451;
+  color: #3b4651;
+
   &__navigation {
     display: flex;
     justify-content: space-around;
@@ -51,14 +52,12 @@ const onNextMonth = () => {
     grid-template-columns: repeat(7, calc(100% / 7));
     border-top: 1px solid #22303e1f;
     border-bottom: 1px solid #22303e1f;
-    // @media screen and (max-width: 600px) {
-    //   grid-template-columns: repeat(7, 50px);
-    // }
   }
   &__day-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    opacity: 0.87;
     @media screen and (max-width: 600px) {
       font-size: 10px;
     }
